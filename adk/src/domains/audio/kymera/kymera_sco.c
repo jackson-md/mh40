@@ -29,6 +29,10 @@
 #include <timestamp_event.h>
 #include <opmsg_prim.h>
 
+#ifdef ENABLE_APP_SIDETONE
+#include "headset_sm.h"
+#endif
+
 #define AWBSDEC_SET_BITPOOL_VALUE    0x0003
 #define AWBSENC_SET_BITPOOL_VALUE    0x0001
 
@@ -445,6 +449,10 @@ void Kymera_ScoHandleInternalStart(const KYMERA_INTERNAL_SCO_START_T *msg)
 {
     Kymera_ScoHandlePrepareReq(msg->audio_sink, msg->sco_info, msg->wesco, msg->synchronised_start);
     Kymera_ScoHandleStartReq(msg->started_handler, msg->volume_in_db);
+
+#ifdef ENABLE_APP_SIDETONE
+    appEnableSideTone(appGetSidetoneStatus());
+#endif
 }
 
 void Kymera_ScoInit(void)
@@ -711,3 +719,10 @@ bool Kymera_UpdateScoCvcSendSetting(kymera_cvc_mode_t mode, uint8 passthrough_mi
 }
 
 #endif /* INCLUDE_CVC_DEMO */
+
+#ifdef ENABLE_APP_MIC_SWITCH
+kymera_chain_handle_t appGetkymeraScoChain(void)
+{
+    return kymera_GetScoChain();
+}
+#endif

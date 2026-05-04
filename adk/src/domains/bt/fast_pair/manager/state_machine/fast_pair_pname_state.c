@@ -87,7 +87,11 @@ static bool fastPair_HandleAdvBloomFilterCalc(fast_pair_state_event_crypto_hash_
 {
     DEBUG_LOG("fastPair_HandleAdvBloomFilterCalc");
 
+#ifdef USE_SYNERGY
+    if(args->crypto_hash_cfm->resultCode == success)
+#else
     if(args->crypto_hash_cfm->status == success)
+#endif /*! USE_SYNERGY */
     {
         fastPair_AdvHandleHashCfm(args->crypto_hash_cfm);
         return TRUE;

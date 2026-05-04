@@ -20,7 +20,8 @@
 #define headsetConfigDisconnectTimeoutMs()  D_SEC(5)
 
 /*! Auto power on after panic. */
-#define appConfigEnableAutoPowerOnAfterPanic() (FALSE)
+//#define appConfigEnableAutoPowerOnAfterPanic() (FALSE)
+#define appConfigEnableAutoPowerOnAfterPanic() (TRUE)
 
 /*! For the post reboot DFU commit phase, limbo to power-on is delayed by this
     period to account for the previous handset link to timeout as DFU reboot

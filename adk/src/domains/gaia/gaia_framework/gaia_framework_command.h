@@ -26,6 +26,14 @@
 
 #define gaiaFramework_BuildCommandId(feature_id, pdu_type, pdu_id) (((feature_id << 9) | (pdu_type << 7)) | pdu_id)
 
+#ifdef ENABLE_APP_MD_GAIA
+#define gaia_MD_GetFeatureID(command_id) (command_id >> 8)
+#define gaia_MD_GetPduType(command_id) (command_id & 0xff)
+#define gaia_MD_GetPduSpecificId(command_id) (command_id & 0x007F)
+
+#define  MD_FEATURE_ID 0x03
+#define MD_GaiaFramework_BuildCommandId(feature_id, pdu_id) (((feature_id << 8) | pdu_id))
+#endif
 
 typedef enum
 {

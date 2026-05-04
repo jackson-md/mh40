@@ -83,5 +83,9 @@ void WiredAudioSource_StopFeature(void);
 
 /*! @} */
 
+#ifdef ENABLE_APP_LINE_IN_AUDIO
+extern bool IsAppLineInAvailable(void);
+#endif
+
 #endif /* WIRED_AUDIO_PRIVATE_H_ */
 

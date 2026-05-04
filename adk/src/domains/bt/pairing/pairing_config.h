@@ -23,15 +23,25 @@
 #define appConfigPeerPairingMinRssiDelta() (10)
 
 /*! Timeout in seconds for user initiated handset pairing */
+
+#ifdef ENABLE_APP_SET_PAIRING_TIMEOUT
+#define appConfigHandsetPairingTimeout()    (600)
+#else
 #define appConfigHandsetPairingTimeout()    (120)
+#endif
 
 /*! Timeout in seconds for authentication 
 
     \note This can include user interaction */
-#define appConfigAuthenticationTimeout()       (45)
+//#define appConfigAuthenticationTimeout()       (45)
+#define appConfigAuthenticationTimeout()       (300)
 
 /*! Timeout in seconds for automatic handset pairing */
+#ifdef ENABLE_APP_SET_PAIRING_TIMEOUT
+#define appConfigAutoHandsetPairingTimeout()    (600)
+#else
 #define appConfigAutoHandsetPairingTimeout()    (300)
+#endif
 
 /*! Timeout in seconds to disable le pairing after br/edr pairing */
 #define appConfigLePairingDisableTimeout()      (60)

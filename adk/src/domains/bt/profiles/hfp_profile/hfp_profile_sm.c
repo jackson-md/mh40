@@ -42,6 +42,10 @@
 
 #include <logging.h>
 
+#ifdef ENABLE_APP_NOTIFY_BATTERY_PRECENT
+#include "hfp_profile_battery_level.h"
+#endif
+
 static void hfpProfile_SetHfpProfile(const bdaddr *bd_addr, hfp_profile profile)
 {
     device_t device = BtDevice_GetDeviceForBdAddr(bd_addr);
@@ -97,6 +101,11 @@ static void appHfpEnterConnected(hfpInstanceTaskData* instance, voice_source_t s
     }
 
     Telephony_NotifyConnected(source);
+
+#ifdef ENABLE_APP_NOTIFY_BATTERY_PRECENT
+    AppNotifyBatteryPrecent();
+#endif
+
     /* Tell clients we have connected */
     MAKE_HFP_MESSAGE(APP_HFP_CONNECTED_IND);
     message->bd_addr = instance->ag_bd_addr;

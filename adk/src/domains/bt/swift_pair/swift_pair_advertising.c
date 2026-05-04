@@ -12,11 +12,20 @@
 #include "local_addr.h"
 #include <logging.h>
 
+#ifndef ENABLE_APP_SWIFT_PAIR_DISCONNECTED_BLE
 #define SWIFT_PAIR_ADV_LENGTH 10
 #define SWIFT_PAIR_MICROSOFT_VENDOR_ID 0x0006
 #define SWIFT_PAIR_MICROSOFT_BEACON_ID 0x03
 #define SWIFT_PAIR_MICROSOFT_SUB_SCENARIO_ID 0X02
 #define SWIFT_PAIR_RESERVED_RSSI_BYTE 0x80
+#else
+#include "bt_device.h"
+#define SWIFT_PAIR_ADV_LENGTH 16
+#define SWIFT_PAIR_MICROSOFT_VENDOR_ID 0x0006
+#define SWIFT_PAIR_MICROSOFT_BEACON_ID 0x03
+#define SWIFT_PAIR_MICROSOFT_SUB_SCENARIO_ID 0X01
+#define SWIFT_PAIR_RESERVED_RSSI_BYTE 0x80
+#endif
 
 /* CoD for an audio sink device is set to 0x240404 (3 bytes) considering the appropriate value for Major Service Class(Bit 18 & 21 set),
    Major Device Class(Bit 10 set) and Minor Device Class(Bit 2 set) according to Bluetooth specification. Bit description is provided below.
@@ -30,6 +39,7 @@
     CoD Bit 2  ---> Wearable Headset Device */
 #define SWIFT_PAIR_CLASS_OF_DEVICE 0x240404
 
+#ifndef ENABLE_APP_SWIFT_PAIR_DISCONNECTED_BLE
 static const uint8 sp_payload[SWIFT_PAIR_ADV_LENGTH] =
 {
     SWIFT_PAIR_ADV_LENGTH - 1,
@@ -43,6 +53,9 @@ static const uint8 sp_payload[SWIFT_PAIR_ADV_LENGTH] =
     (SWIFT_PAIR_CLASS_OF_DEVICE >> 8) & 0xFF,
     (SWIFT_PAIR_CLASS_OF_DEVICE >> 16) & 0xFF,
 };
+#else
+static uint8 sp_payload[SWIFT_PAIR_ADV_LENGTH] = {0};
+#endif
 
 static const le_adv_item_data_t sp_advert_payload =
 {
@@ -53,12 +66,44 @@ static const le_adv_item_data_t sp_advert_payload =
 static le_adv_mgr_register_handle swift_pair_registered_handle = NULL;
 static bool IsInPairingMode = FALSE;
 
+#ifndef ENABLE_APP_SWIFT_PAIR_DISCONNECTED_BLE
 static bool swiftPair_GetData(le_adv_item_data_t * item)
 {
     *item = sp_advert_payload;
     return TRUE;
 }
+#else
+static bool swiftPair_GetData(le_adv_item_data_t * item)
+{
+    bdaddr bd_addr = {0};
+    bool val = appDeviceGetMyBdAddr(&bd_addr);
 
+    sp_payload[0] =SWIFT_PAIR_ADV_LENGTH - 1;
+    sp_payload[1] =ble_ad_type_manufacturer_specific_data;
+    sp_payload[2] =SWIFT_PAIR_MICROSOFT_VENDOR_ID & 0xFF;
+    sp_payload[3] =(SWIFT_PAIR_MICROSOFT_VENDOR_ID >> 8) & 0xFF;
+    sp_payload[4] =SWIFT_PAIR_MICROSOFT_BEACON_ID;
+    sp_payload[5] =SWIFT_PAIR_MICROSOFT_SUB_SCENARIO_ID;
+    sp_payload[6] =SWIFT_PAIR_RESERVED_RSSI_BYTE;
+
+    if (val == TRUE)
+    {
+        sp_payload[12] = (bd_addr.nap >> 8) & 0xff;
+        sp_payload[11] = (bd_addr.nap) & 0xff;
+        sp_payload[10] = (bd_addr.uap) & 0xff;
+        sp_payload[9] = (bd_addr.lap >> 16) &0xff;
+        sp_payload[8] = (bd_addr.lap >> 8) &0xff;
+        sp_payload[7] = (bd_addr.lap) & 0xff;
+    }
+
+    sp_payload[13] =SWIFT_PAIR_CLASS_OF_DEVICE & 0xFF;
+    sp_payload[14] =(SWIFT_PAIR_CLASS_OF_DEVICE >> 8) & 0xFF;
+    sp_payload[15] =(SWIFT_PAIR_CLASS_OF_DEVICE >> 16) & 0xFF;
+
+    *item = sp_advert_payload;
+    return TRUE;
+}
+#endif
 #ifdef LE_ADVERTISING_MANAGER_NEW_API
 
 static inline bool swiftPair_CanAdvertise(void)
@@ -115,7 +160,8 @@ le_adv_item_callback_t swiftPair_AdvertisingManagerCallback =
 static bool swiftPair_CanAdvertiseWithParams(const le_adv_data_params_t * params)
 {
     bool can_advertise = FALSE;
-    if(params->data_set != le_adv_data_set_peer
+
+    if ((params->data_set != le_adv_data_set_peer)
             && (IsInPairingMode && SWIFT_PAIR_ADV_PARAMS_REQUESTED(params)))
     {
         can_advertise = TRUE;

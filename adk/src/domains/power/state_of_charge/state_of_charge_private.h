@@ -30,6 +30,9 @@ typedef struct soc_registered_client_item
 typedef struct
 {
     uint16 state_of_charge;
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+    uint16 save_battery_percent;
+#endif
 	uint8 charger_connected;
     uint8 config_index;
     uint8 low_battery_percent;  /* Level below which the battery is "low", default 30 */

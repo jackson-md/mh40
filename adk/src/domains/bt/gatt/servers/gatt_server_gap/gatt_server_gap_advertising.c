@@ -17,13 +17,30 @@
 #include <stdlib.h>
 
 #define GAP_ADVERT_FLAGS        (BLE_FLAGS_GENERAL_DISCOVERABLE_MODE | BLE_FLAGS_DUAL_CONTROLLER | BLE_FLAGS_DUAL_HOST)
+
+/* INN_kenny 20220928 LE CODE */
+#ifdef ENABLE_APP_KENNY_LE_CODE
+#define GAP_ADVERT_FLAGS_LENGTH 7
+#else /*ENABLE_APP_KENNY_LE_CODE*/
 #define GAP_ADVERT_FLAGS_LENGTH 3
+#endif /*ENABLE_APP_KENNY_LE_CODE*/
 
 static const uint8 gap_adv_flags_data[GAP_ADVERT_FLAGS_LENGTH] =
 {
+/* INN_kenny 20220928 LE CODE */
+#ifdef ENABLE_APP_KENNY_LE_CODE
+    3 - 1,
+    ble_ad_type_flags,
+    GAP_ADVERT_FLAGS,
+    0x03,
+    0x1A,
+    0x0A,
+    0x18
+#else /*ENABLE_APP_KENNY_LE_CODE*/
     GAP_ADVERT_FLAGS_LENGTH - 1,
     ble_ad_type_flags,
     GAP_ADVERT_FLAGS
+#endif /*ENABLE_APP_KENNY_LE_CODE*/
 };
 
 static le_adv_item_data_t gap_name_item = {0};
@@ -72,6 +89,38 @@ static bool gattServerGap_GetItemDataName(le_adv_item_data_t * item)
     *item = gap_name_item;
     return TRUE;
 }
+
+#if 0
+static bool gattServerGap_GetItemDataName(le_adv_item_data_t * item)
+{
+    PanicNull(item);
+    DEBUG_LOG("gattServerGap_GetAdvertisingItemName gap_name_item.data:%d", gap_name_item.data);
+
+    uint8 name[] = {0x4d, 0x26, 0x44, 0x20, 0x4d, 0x48, 0x34, 0x30, 0x57, 0x32};
+    uint16 name_len = sizeof (name)/sizeof (name[0]);
+
+    if(gap_name_item.data)
+    {
+        free((void *)gap_name_item.data);
+        gap_name_item.data = NULL;
+    }
+
+    if(gap_name_item.data == NULL)
+    {
+        uint16 data_len = name_len + AD_DATA_HEADER_SIZE;
+        uint8* data = PanicUnlessMalloc(data_len);
+
+        data[AD_DATA_LENGTH_OFFSET] = name_len + 1;
+        data[AD_DATA_TYPE_OFFSET] = ble_ad_type_complete_local_name;
+        memcpy(&data[AD_DATA_HEADER_SIZE], name, name_len);
+
+        gap_name_item.size = data_len;
+        gap_name_item.data = data;
+    }
+    *item = gap_name_item;
+    return TRUE;
+}
+#endif
 
 static void gattServerGap_ReleaseItemDataName(void)
 {

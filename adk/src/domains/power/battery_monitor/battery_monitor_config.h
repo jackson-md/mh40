@@ -9,19 +9,31 @@
 #ifndef BATTERY_MONITOR_CONFIG_H_
 #define BATTERY_MONITOR_CONFIG_H_
 
-
+#ifndef ENABLE_APP_CHANGE_BATTERYLEVEL_MAPPING
 //!@{ @name Battery voltage levels in milli-volts
 #define appConfigBatteryFullyCharged()      (4200)
 #define appConfigBatteryVoltageOk()         (3600)
 #define appConfigBatteryVoltageLow()        (3300)
 #define appConfigBatteryVoltageCritical()   (3000)
 //!@}
+#else
+#define appConfigBatteryFullyCharged()      (4150)
+#define appConfigBatteryVoltageOk()         (3784)
+#define appConfigBatteryVoltageLow()        (3506)
+#define appConfigBatteryVoltageCritical()   (3251)
+#endif
 
 //!@{ @name Battery temperature limits in degrees Celsius.
 #define appConfigBatteryChargingTemperatureMax() 45
 #define appConfigBatteryChargingTemperatureMin() 0
+
+#ifdef ENABLE_APP_NTC_HANDLE
+#define appConfigBatteryDischargingTemperatureMax() 55
+#define appConfigBatteryDischargingTemperatureMin() -15
+#else
 #define appConfigBatteryDischargingTemperatureMax() 60
 #define appConfigBatteryDischargingTemperatureMin() -20
+#endif
 //!@}
 
 /*! Margin to apply on battery readings before accepting that
@@ -32,6 +44,10 @@
 #define appConfigBatteryReadingPeriodMs() D_SEC(1)
 #define appConfigBatteryMedianFilterWindow() 5
 /* smoothing factor stored as multiple of 100 */
+#ifdef ENABLE_APP_NTC_HANDLE
+#define appConfigBatterySmoothingWeight() 10
+#else
 #define appConfigBatterySmoothingWeight() 50
+#endif
 
 #endif /* BATTERY_MONITOR_CONFIG_H_ */

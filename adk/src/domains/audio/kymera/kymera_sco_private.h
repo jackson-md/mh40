@@ -83,4 +83,8 @@ bool Kymera_ScoIsActive(void);
 bool Kymera_UpdateScoCvcSendSetting(kymera_cvc_mode_t mode, uint8 passthrough_mic);
 #endif /* INCLUDE_CVC_DEMO */
 
+#ifdef ENABLE_APP_MIC_SWITCH
+kymera_chain_handle_t appGetkymeraScoChain(void);
+#endif
+
 #endif /* KYMERA_SCO_PRIVATE_H_ */

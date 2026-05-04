@@ -10,6 +10,8 @@
 #define USER_ACCOUNTS_H_
 #include "fast_pair_account_key_sync.h"
 
+/* Very first account key to be written is considered as owner account key */
+#define OWNER_USER_ACCOUNT_KEY_INDEX                (0)
 #define MAX_NUM_ACCOUNT_KEYS                        (5)
 #define MAX_USER_ACCOUNT_KEY_LEN                    (16)
 #define INVALID_USER_ACCOUNT_KEY_INDEX              (0xFF)
@@ -33,6 +35,11 @@ typedef struct user_account_key_index
 typedef struct user_account_key_info
 {
     user_account_key_index_t account_key_index[MAX_NUM_ACCOUNT_KEYS];
+
+    /* Very first account key, i.e in zeroth index considered as owner account key,
+     * order shall be maintained while adding new account key. Owner account key shall not
+     * be replaced when device runs out of space.
+     */
     uint8  account_keys[MAX_USER_ACCOUNT_KEY_LEN * MAX_NUM_ACCOUNT_KEYS];
 } user_account_key_info_t;
 

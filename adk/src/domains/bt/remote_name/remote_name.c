@@ -10,7 +10,7 @@
 */
 
 #include "remote_name.h"
-
+#include "handset_service.h" //Han Modified 20230317
 #include <device_pskey.h>
 
 #include <bt_device.h>
@@ -78,7 +78,8 @@ static void remoteName_MessageHandler(Task task, MessageId id, Message message)
 
     switch (id)
     {
-        case APP_HFP_CONNECTED_IND:
+        //case APP_HFP_CONNECTED_IND:
+        case HANDSET_SERVICE_FIRST_PROFILE_CONNECTED_IND://Han Modified 20230317
         {
             APP_HFP_CONNECTED_IND_T *msg = (APP_HFP_CONNECTED_IND_T *)message;
             remoteName_SendRequest(BtDevice_GetDeviceForBdAddr(&msg->bd_addr));
@@ -142,7 +143,7 @@ bool RemoteName_Init(Task init_task)
     remote_name.listeners = TaskList_WithDataCreate();
 
     HfpProfile_RegisterStatusClient((Task)&remote_name.task_data);
-
+    HandsetService_ClientRegister((Task)&remote_name.task_data);//Han Modified 20230317
     /* Clear run time flags which may have been written to persistent store */
     DevicePsKey_ClearFlagInAllDevices(device_pskey_remote_device_name, device_ps_key_flag_new_data_pending);
 

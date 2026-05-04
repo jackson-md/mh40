@@ -17,6 +17,10 @@
 #include "led_manager_protected.h"
 #include "adk_log.h"
 
+#ifdef ENABLE_APP_OTA_FINISH_RECONNECT_LED
+#include "headset_test.h"
+#endif
+
 /*!< LED data structure */
 led_manager_task_data_t led_mgr;
 
@@ -80,6 +84,13 @@ static uint16 ledManager_GetPioNumForLed(uint16 led_num)
     {
         led_pio = led_mgr.hw_config->led2_pio;
     }
+
+#ifdef ENABLE_APP_ADD_LED3
+    else if (led_num == 3)
+    {
+        led_pio = led_mgr.hw_config->led3_pio;
+    }
+#endif
     return led_pio;
 }
 
@@ -133,6 +144,9 @@ static void ledManager_Update(void)
         {
             /* Jump then fall-through to set the correct number of LEDS */
 #if defined HAVE_RDP_HW_18689 || defined HAVE_RDP_HW_MOTION
+#ifdef ENABLE_APP_ADD_LED3
+            case 4: ledManager_SetPio(3, led_state, FALSE);
+#endif
             case 3: ledManager_SetPio(2, led_state, TRUE);
 #else
             case 3: ledManager_SetPio(2, led_state, FALSE);
@@ -144,6 +158,30 @@ static void ledManager_Update(void)
     }
     else
     {
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+        for(uint8 i = 0; i < led_mgr.hw_config->number_of_leds; i++)
+        {
+            if(led_mgr.pwm&(1<<i))
+            {
+                /* PWM START */
+                LedConfigure(i, LED_FLASH_ENABLE, PWM_FLASH_ENABLE);
+                LedConfigure(i, LED_PERIOD, PWM_FLASH_PERIO);
+                LedConfigure(i, LED_INITIAL_STATE, PWM_INITIAL_STATE);
+                LedConfigure(i, LED_DUTY_CYCLE, PWM_DUTY_CYCLE);
+                LedConfigure(i, LED_FLASH_LOW_DUTY_CYCLE, PWM_LOW_DUTY_CYCLE);
+                LedConfigure(i, LED_FLASH_MAX_HOLD, PWM_MAX_BRIGHTNESS_HOLD_TIME);
+                LedConfigure(i, LED_FLASH_MIN_HOLD, PWM_MIN_BRIGHTNESS_HOLD_TIME);
+                LedConfigure(i, LED_FLASH_RATE, PWM_FLASH_RATE);
+                LedConfigure(i, LED_ENABLE, PWM_LED_ENABLE);
+            }
+            else
+            {
+                LedConfigure(i, LED_FLASH_ENABLE, 0x0);
+                LedConfigure(i, LED_ENABLE, led_state & (1<<i) ? 1 : 0);
+            }
+        }
+#else
+        /*
         switch (led_mgr.hw_config->number_of_leds)
         {
             case 3: LedConfigure(2, LED_ENABLE, led_state & 0x04 ? 1 : 0);
@@ -151,6 +189,8 @@ static void ledManager_Update(void)
             case 1: LedConfigure(0, LED_ENABLE, led_state & 0x01 ? 1 : 0);
             default: break;
         }
+        */
+#endif
     }
 }
 
@@ -178,6 +218,59 @@ static bool ledManager_HandleInternalUpdate(void)
 
         switch (pattern->code)
         {
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+            case LED_PATTERN_PWM_ON:
+            {
+                /* Update flags for breaking_led_on */
+                led_mgr.breathing_led_on = TRUE;
+
+                /* Move to next instruction */
+                stack->position++;
+
+                if (!(led_mgr.pwm & pattern->data))
+                {
+                    /* Update LEDs on exit */
+                    update_leds = TRUE;
+
+                    /* Turn on LED */
+                    led_mgr.led_state |= pattern->data;
+                    led_mgr.pwm |= pattern->data;
+                }
+            }
+            break;
+
+            case LED_PATTERN_PWM_OFF:
+            {
+                /* Update flags for breaking_led_on */
+                led_mgr.breathing_led_on = FALSE;
+
+                /* Update LEDs on exit */
+                update_leds = TRUE;
+
+                /* Turn off LED */
+                led_mgr.led_state &= ~pattern->data;
+                led_mgr.pwm &= ~pattern->data;
+
+                LedConfigure(LED_0, LED_FLASH_ENABLE, 0x0);
+                LedConfigure(LED_0, LED_ENABLE, 0);
+
+                /* Move to next instruction */
+                stack->position++;
+            }
+            break;
+
+            case LED_PATTERN_PWM_TIMES:
+            {
+                uint16 delay = 3000 * pattern->data + 1000;
+                MessageSendLater(&led_mgr.task, LED_INTERNAL_UPDATE, 0, delay);
+
+                /* Move to next instruction */
+                stack->position++;
+
+                /* Exit loop */
+                return update_leds;
+            }
+#endif
             case LED_PATTERN_END:
             {
                 /* Stop this pattern */
@@ -356,7 +449,9 @@ static void ledManager_SetPriority(int8 priority)
 
     /* Clear LEDs */
     led_mgr.led_state = 0;
-
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+    led_mgr.pwm = 0;
+#endif
     /* Cancel LED update message */
     MessageCancelFirst(&led_mgr.task, LED_INTERNAL_UPDATE);
 
@@ -439,6 +534,15 @@ static void ledManager_Handler(Task task, MessageId id, Message message)
             state->stack[0].loop_start = 0;
             state->stack[0].loop_end = 0;
             state->stack[0].loop_count = 0;
+
+            DEBUG_LOG("req->priority: %d, led_mgr.priority: %d", req->priority, led_mgr.priority);
+
+#ifdef ENABLE_APP_OTA_FINISH_RECONNECT_LED
+            if (appGetOtaRebootFlag() == TRUE)
+            {
+                led_mgr.priority = -1;
+            }
+#endif
 
             /* Check if LEDs are enabled */
             if (led_mgr.enable)
@@ -539,6 +643,10 @@ static void ledManager_setupLedPioHw(void)
 {
     switch (led_mgr.hw_config->number_of_leds)
     {
+#ifdef ENABLE_APP_ADD_LED3
+        case 4:
+            ledManager_setupSingleLedPioHw(led_mgr.hw_config->led3_pio);
+#endif
         // Jump then fall-through to setup the correct number of LEDS
         case 3:
             ledManager_setupSingleLedPioHw(led_mgr.hw_config->led2_pio);
@@ -572,6 +680,11 @@ bool LedManager_Init(Task init_task)
     led_mgr.led_state = 0;
     led_mgr.enable = TRUE;
     led_mgr.lock = 0;
+
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+    led_mgr.breathing_led_on = FALSE;
+    led_mgr.pwm = 0;
+#endif
 
     /* Clear patterns */
     for (priority = 0; priority < LED_NUM_PRIORITIES; priority++)
@@ -726,7 +839,11 @@ bool LedManager_IsPioAnLed(unsigned pio)
 {
     PanicFalse(led_mgr.hw_config != NULL);
     return pio >= led_mgr.hw_config->led0_pio &&
+#ifdef ENABLE_APP_ADD_LED3
+           pio <= led_mgr.hw_config->led3_pio;
+#else
            pio <= led_mgr.hw_config->led2_pio;
+#endif
 }
 
 unsigned LedManager_GetLedNumberForPio(unsigned pio)

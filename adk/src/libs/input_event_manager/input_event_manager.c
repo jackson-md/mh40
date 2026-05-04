@@ -352,7 +352,18 @@ static uint32 calculateInputEvents(InputEventState_t *state)
 static void handleMessagePioChangedEvents(InputEventState_t *state, const MessagePioChanged *mpc)
 {
     /* Mask out PIOs we're not interested in */
+
+#if 0
     const uint32 pio_state = (mpc->state) + ((uint32)mpc->state16to31 << 16);
+    const uint32 pio_state_masked = pio_state & state->input_config->pio_input_mask[mpc->bank];
+#endif
+
+    /* ----- ENABLE_APP_LOW_LEVEL_BUTTON --- start ---*/
+    //const uint32 pio_state = (mpc->state) + ((uint32)mpc->state16to31 << 16);
+    uint32 pio_state = (mpc->state) + ((uint32)mpc->state16to31 << 16);
+    pio_state ^= 0x1C;
+    /* ----- ENABLE_APP_LOW_LEVEL_BUTTON ---- end ----*/
+
     const uint32 pio_state_masked = pio_state & state->input_config->pio_input_mask[mpc->bank];
 
     if (state->pio_state[mpc->bank] != pio_state_masked)

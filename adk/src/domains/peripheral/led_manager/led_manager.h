@@ -50,8 +50,13 @@ typedef enum
 */
 typedef struct
 {
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+    unsigned int code:4;	/*!< Code to control the next sequence in the pattern */
+#else
     unsigned int code:3;	/*!< Code to control the next sequence in the pattern */
+#endif
     unsigned int data:13;	/*!< LED pins controlled by the code */
+
 } led_pattern_t;
 
 /*! Type of filter function used for LEDs. See \ref LedManager_SetFilter */
@@ -79,6 +84,12 @@ typedef uint16 (*led_filter_t)(uint16);
 #define LED_PATTERN_SYNC    (0x0006)            /*!< Marker for a synchronisation pause instruction */
 #define LED_PATTERN_LOCK    (0x0007)            /*!< Marker for a lock/unlock instruction */
 
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+#define LED_PATTERN_PWM_ON      (0x0008)
+#define LED_PATTERN_PWM_OFF     (0x0009)
+#define LED_PATTERN_PWM_TIMES   (0X000a)
+#endif
+
 #define LED_ON(pio)             {LED_PATTERN_ON,  (pio)}                        /*!< Turn on LEDs */
 #define LED_OFF(pio)            {LED_PATTERN_OFF, (pio)}                        /*!< Turn off LEDs */
 #define LED_TOGGLE(pio)         {LED_PATTERN_TOGGLE, (pio)}                     /*!< Toggle the LEDs */
@@ -88,6 +99,22 @@ typedef uint16 (*led_filter_t)(uint16);
 #define LED_END                 {LED_PATTERN_END, 0}                            /*!< Used to specify the end of the LED pattern */
 #define LED_LOCK                {LED_PATTERN_LOCK, 1}                           /*!< Lock pattern, prevents any else from interrupting pattern */
 #define LED_UNLOCK              {LED_PATTERN_LOCK, 0}                           /*!< Unlock pattern, allows something else to pattern */
+
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+#define LED_PWM_ON(pio)         {LED_PATTERN_PWM_ON,(pio)}
+#define LED_PWM_OFF(pio)        {LED_PATTERN_PWM_OFF,(pio)}
+#define LED_PWM_TIMES(times)    {LED_PATTERN_PWM_TIMES,(times)}
+
+#define PWM_LED_ENABLE                  0X01
+#define PWM_FLASH_ENABLE                0X01
+#define PWM_FLASH_RATE                  0x09
+#define PWM_DUTY_CYCLE                  0xeca
+#define PWM_FLASH_PERIO                 0X08
+#define PWM_INITIAL_STATE               0x07
+#define PWM_LOW_DUTY_CYCLE              0X00
+#define PWM_MIN_BRIGHTNESS_HOLD_TIME    0x3000
+#define PWM_MAX_BRIGHTNESS_HOLD_TIME    0xa7ff
+#endif
 /*!@} */
 
 /*! Stack element */
@@ -115,7 +142,11 @@ typedef struct
 /*! \brief led configuration structure */
 typedef struct
 {
+#ifdef ENABLE_APP_ADD_LED3
+    unsigned number_of_leds:3;
+#else
     unsigned number_of_leds:2;
+#endif
     /*! Use PIOs for LED control, rather than the LED hardware blocks. PIOs were found to use lower power for the use cases here. */
     unsigned leds_use_pio:1;
     /*! The PIO that LED 0 is connected on. This is only required if leds_use_pio is set to TRUE. */
@@ -124,6 +155,10 @@ typedef struct
     unsigned led1_pio;
     /*! The PIO that LED 2 is connected on. This is only required if leds_use_pio is set to TRUE and number_of_leds is greater than 2. */
     unsigned led2_pio;
+
+#ifdef ENABLE_APP_ADD_LED3
+    unsigned led3_pio;
+#endif
 
 } led_manager_hw_config_t;
 
@@ -144,6 +179,11 @@ typedef struct
     uint16                 client_lock_mask;
 
     const led_manager_hw_config_t * hw_config;
+
+#ifdef ENABLE_APP_BREATHING_PAIRING_LED
+    bool breathing_led_on:1;             /*!< breathing_led_on by OYH */
+    uint16 pwm:4;
+#endif
 
 } led_manager_task_data_t;
 

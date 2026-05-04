@@ -27,6 +27,10 @@ NOTES
 #define UPGRADE_MSG_HEADER_SIZE (sizeof(uint8) + sizeof(uint16))
 
 
+/*--- ENABLE_APP_OTA_LED  --- start ---*/
+#define  ENABLE_APP_UPDRADE_OTA_LED 0x01
+/*--- ENABLE_APP_OTA_LED  ---  end  ---*/
+
 void UpgradeHostIFDataSendShortMsg(uint16 message)
 {
     UpgradeMsgHost msgId = (UpgradeMsgHost)message;
@@ -173,6 +177,12 @@ void UpgradeHostIFDataSendSilentCommitSupportedCfm(uint8 is_silent_commit_suppor
     UpgradeHostIFClientSendData(payload, byteIndex);
 }
 
+#ifdef ENABLE_APP_UPDRADE_OTA_LED
+/*--- ENABLE_APP_OTA_LED  --- start ---*/
+void TwsTopology_SetOtaEnable(bool val);
+/*--- ENABLE_APP_OTA_LED  ---  end  ---*/
+#endif
+
 bool UpgradeHostIFDataBuildIncomingMsg(Task clientTask, const uint8 *data, uint16 dataSize, bool* is_data_cfm_needed)
 {
     *is_data_cfm_needed = TRUE;
@@ -204,6 +214,12 @@ bool UpgradeHostIFDataBuildIncomingMsg(Task clientTask, const uint8 *data, uint1
         {
             if (msgLen == UPGRADE_HOST_SYNC_REQ_BYTE_SIZE)
             {
+#ifdef ENABLE_APP_UPDRADE_OTA_LED
+                /*--- ENABLE_APP_OTA_LED  --- start ---*/
+                DEBUG_LOG_INFO("UPGRADE_HOST_SYNC_REQ Set ota_enable:1");
+                TwsTopology_SetOtaEnable(TRUE);
+                /*--- ENABLE_APP_OTA_LED  ---  end  ---*/
+#endif
                 MESSAGE_MAKE(msg, UPGRADE_HOST_SYNC_REQ_T);
                 msg->inProgressId = ByteUtilsGet4BytesFromStream(msgPayload);
                 MessageSend(clientTask, msgId, msg);
@@ -216,6 +232,12 @@ bool UpgradeHostIFDataBuildIncomingMsg(Task clientTask, const uint8 *data, uint1
         break;
 
         case UPGRADE_HOST_START_REQ:
+#ifdef ENABLE_APP_UPDRADE_OTA_LED
+            /*--- ENABLE_APP_OTA_LED  --- start ---*/
+            DEBUG_LOG_INFO("UPGRADE_HOST_START_REQ Set ota_enable:1");
+            TwsTopology_SetOtaEnable(TRUE);
+            /*--- ENABLE_APP_OTA_LED  ---  end  ---*/
+#endif
             DEBUG_LOG_INFO("UpgradeHostIFDataBuildIncomingMsg, UPGRADE_HOST_START_REQ");
             MessageSend(clientTask, msgId, NULL);
             break;
@@ -226,6 +248,12 @@ bool UpgradeHostIFDataBuildIncomingMsg(Task clientTask, const uint8 *data, uint1
             break;
 
         case UPGRADE_HOST_ABORT_REQ:
+#ifdef ENABLE_APP_UPDRADE_OTA_LED
+            /*--- ENABLE_APP_OTA_LED  --- start ---*/
+            DEBUG_LOG_INFO("UPGRADE_HOST_ABORT_REQ Set ota_enable:0");
+            TwsTopology_SetOtaEnable(FALSE);
+            /*--- ENABLE_APP_OTA_LED  ---  end  ---*/
+#endif
             DEBUG_LOG_INFO("UpgradeHostIFDataBuildIncomingMsg, UPGRADE_HOST_ABORT_REQ");
             MessageSend(clientTask, msgId, NULL);
             break;
@@ -335,6 +363,12 @@ bool UpgradeHostIFDataBuildIncomingMsg(Task clientTask, const uint8 *data, uint1
 
         case UPGRADE_HOST_COMMIT_CFM:
         {
+#ifdef ENABLE_APP_UPDRADE_OTA_LED
+            /*--- ENABLE_APP_OTA_LED  --- start ---*/
+            DEBUG_LOG_INFO("UPGRADE_HOST_COMMIT_CFM Set ota_enable:0");
+            TwsTopology_SetOtaEnable(FALSE);
+            /*--- ENABLE_APP_OTA_LED  ---  end ---*/
+#endif
             if (msgLen == UPGRADE_HOST_COMMIT_CFM_BYTE_SIZE)
             {
                 MESSAGE_MAKE(msg, UPGRADE_HOST_COMMIT_CFM_T);
@@ -349,6 +383,12 @@ bool UpgradeHostIFDataBuildIncomingMsg(Task clientTask, const uint8 *data, uint1
 
         case UPGRADE_HOST_ERRORWARN_RES:
         {
+#ifdef ENABLE_APP_UPDRADE_OTA_LED
+            /*--- ENABLE_APP_OTA_LED  --- start ---*/
+            DEBUG_LOG_ALWAYS("UPGRADE_HOST_ERRORWARN_RES Set ota_enable:0");
+            TwsTopology_SetOtaEnable(FALSE);
+            /*--- ENABLE_APP_OTA_LED  ---  end ---*/
+#endif
             if (msgLen == UPGRADE_HOST_ERRORWARN_RES_BYTE_SIZE)
             {
                 MESSAGE_MAKE(msg, UPGRADE_HOST_ERRORWARN_RES_T);

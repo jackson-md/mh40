@@ -44,4 +44,11 @@ const uint8 *LocalName_GetName(uint16* name_len);
 */
 const uint8 *LocalName_GetPrefixedName(uint16* name_len);
 
+#ifdef ENABLE_APP_MD_GAIA
+extern bool LocalName_SetTymPsKeyName(uint16 size_tym_name, uint8 *tym_name);
+extern bool LocalName_GetTymPsKeyName(uint16 *size_tym_name, uint8 *tym_name);
+extern bool LocalName_GetTESTPsKeyName(uint16 *size_tym_name, uint8 *tym_name);
+extern bool LocalName_TymPsKeyNameCheck(Task init_task);
+#endif
+
 #endif /* _DOMAINS_BT_LOCAL_NAME_ */

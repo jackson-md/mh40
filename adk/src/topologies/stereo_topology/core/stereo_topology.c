@@ -28,6 +28,11 @@
 #include <pairing.h>
 #include <panic.h>
 
+#ifdef ENABLE_APP_OTA_LED
+#include "ui_indicator_leds.h"
+#include "headset_leds_config_table.h"
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_TYPE(stereo_topology_message_t)
 LOGGING_PRESERVE_MESSAGE_TYPE(stereo_topology_internal_message_t)
@@ -412,3 +417,28 @@ void StereoTopology_SetState(stereo_topology_sm_t new_state)
 
     DEBUG_LOG_VERBOSE("StereoTopology_SetState, new state 0x%02x", sm->stereo_topology_state);
 }
+
+
+#ifdef ENABLE_APP_OTA_LED
+void TwsTopology_SetOtaEnable(bool val)
+{
+    DEBUG_LOG("TwsTopology_SetDfuMode. enter_dfu_mode:%d", val);
+    StereoTopologyGetTaskData()->ota_enable = val;
+
+    if(StereoTopologyGetTaskData()->ota_enable)
+    {
+        UiLeds_NotifyUiIndication(get_LED_APP_OTA_LEDIndex());
+    }
+    else
+    {
+        UiLeds_NotifyUiIndication(get_LED_App_Idle_Connected_LEDIndex());
+        UiLeds_RefleshContex();
+    }
+}
+
+bool TwsTopology_IsOtaEnable(void)
+{
+    DEBUG_LOG("TwsTopology_IsOtaEnable:%d", StereoTopologyGetTaskData()->ota_enable);
+    return StereoTopologyGetTaskData()->ota_enable;
+}
+#endif

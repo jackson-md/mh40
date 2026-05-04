@@ -105,6 +105,44 @@ enum powerClientMessages
     /*! Message indicating the application is powering off */
     POWER_OFF,
 
+#ifdef ENABLE_APP_BATTERY_CHECK_LED
+    INN_BATTERY_LEVEL_HIGH,
+
+    INN_BATTERY_LEVEL_MEDIUM,
+
+    INN_BATTERY_LEVEL_LOW,
+#endif
+
+#ifdef ENABLE_APP_OTA_LED
+    INN_OTA_PROCESSING_LED,
+
+    INN_OTA_COMPLETE_LED,
+#endif
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+
+    INN_BATTERY_LOW_WARNING_LED,
+
+    INN_BATTERY_LOW_WARNING_PROMPT,
+#endif
+
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+    INN_ENTER_DUT_LED,
+#endif
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+    INN_APP_BATTERY_CHARGE_COMPLETE,
+#endif
+
+#ifdef ENABLE_APP_FACTORY_RESET
+    INN_APP_FACTORY_RESET,
+#endif
+
+#ifdef ENABLE_APP_MIC_MUTE
+    INN_APP_MIC_MUTE_PROMPT,
+    INN_APP_MIC_UNMUTE_PROMPT,
+#endif
+
     /*! This must be the final message */
     POWER_APP_MESSAGE_END
 };
@@ -230,5 +268,22 @@ void appPowerPerformanceProfileRequestDuration(Delay duration);
           their task.
 */
 void appPowerInitComplete(void);
+
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+extern void appEnterDutMode(void);
+#endif
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+extern void appBatteryChargeComplete(void);
+#endif
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+extern void appPowerBatteryLowLed(void);
+extern void appPowerBatteryLowPrompt(void);
+#endif
+
+#ifdef ENABLE_APP_FACTORY_RESET
+void appFactoryReset(void);
+#endif
 
 #endif /* POWER_MANAGER_H_ */

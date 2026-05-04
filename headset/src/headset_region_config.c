@@ -12,6 +12,38 @@
 #include "battery_region.h"
 
 /*! \brief charge mode config table*/
+
+#ifdef ENABLE_APP_NTC_HANDLE
+const charge_region_t headset_charge_mode_config_table[] =
+{
+    {0,       Vfloat,   4350, 100, -40, 0,  1, NORMAL_REGION, 0},
+    {0,       Vfloat,   4350, 100,  0,  45, 1, NORMAL_REGION, 0},
+    {0,       Vfloat,   4350, 100,  45, 85, 1, NORMAL_REGION, 0},
+
+    {0,         3600, Vfloat, 10,  -40, 0,  0, NORMAL_REGION, 0},
+    {70,        3600, Vfloat, 10,    1, 14, 0, NORMAL_REGION, CHARGING_TIMER_TIMEOUT},
+    {FAST,      3600, Vfloat, 10,   15, 45, 0, NORMAL_REGION, CHARGING_TIMER_TIMEOUT},
+    {0,         3600, Vfloat, 10,   46, 85, 0, NORMAL_REGION, 0},
+
+    {0,        Vcrit,   3600, 10,  -40, 0,  0, NORMAL_REGION, 0},
+    {70,       Vcrit,   3600, 10,    1, 14, 0, NORMAL_REGION, CHARGING_TIMER_TIMEOUT},
+    {FAST,     Vcrit,   3600, 10,   15, 45, 0, NORMAL_REGION, CHARGING_TIMER_TIMEOUT},
+    {0,        Vcrit,   3600, 10,   46, 85, 0, NORMAL_REGION, 0},
+
+    {0,        Vfast,  Vcrit, 10,  -40, 0,  0, CRITICAL_REGION, 0},
+    {70,       Vfast,  Vcrit, 10,    1, 14, 0, CRITICAL_REGION, 0},
+    {FAST,     Vfast,  Vcrit, 10,   15, 45, 0, CRITICAL_REGION, 0},
+    {0,        Vfast,  Vcrit, 10,   46, 85, 0, CRITICAL_REGION, 0},
+
+    {0,         Vpre,  Vfast, 10,  -40, 0,  1, CRITICAL_REGION, 0},
+    {PRE,       Vpre,  Vfast, 10,    0, 45, 1, CRITICAL_REGION, 0},
+    {0,         Vpre,  Vfast, 10,   45, 85, 1, CRITICAL_REGION, 0},
+
+    {0,            0,   Vpre, 10,  -40, 0,  1, CRITICAL_REGION, 0},
+    {TRICKLE,      0,   Vpre, 10,    0, 45, 1, CRITICAL_REGION, 0},
+    {0,            0,   Vpre, 10,   45, 85, 1, CRITICAL_REGION, 0},
+};
+#else
 const charge_region_t headset_charge_mode_config_table[] =
 {
     {0,       Vfloat_adjusted,   5000, 100, -40, 0,  1, NORMAL_REGION, 0},
@@ -33,6 +65,7 @@ const charge_region_t headset_charge_mode_config_table[] =
     {TRICKLE,      0,   Vpre, 50,    0, 45, 1, CRITICAL_REGION, 0},
     {0,            0,   Vpre, 50,   45, 85, 1, CRITICAL_REGION, 0},
 };
+#endif
 
 /*! \brief discharge mode config table*/
 const charge_region_t headset_discharge_mode_config_table[] =

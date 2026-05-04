@@ -585,7 +585,6 @@ bool FastPair_Init(Task init_task)
 
     memset(theFastPair, 0, sizeof(*theFastPair));
 
-    /* Set up task handler */
     theFastPair->task.handler = FastPair_HandleMessage;
 
     /* Initialise state */

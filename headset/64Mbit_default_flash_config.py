@@ -19,11 +19,11 @@
         # image_header partition
         ("curator_fs",      {"capacity":  16 * 4 * 1024,  "authenticate": False, "src_file_signed": False}),
         ("apps_p0",         {"capacity": 192 * 4 * 1024,  "authenticate": True, "src_file_signed": True}),
-        ("apps_p1",         {"capacity": 170 * 4 * 1024,  "authenticate": False}),
+        ("apps_p1",         {"capacity": 370 * 4 * 1024,  "authenticate": False}),
         # Device config filesystem size limited by size of production test buffer,  ( 1024*2)-10.
         ("device_ro_fs",    {"capacity":  16 * 4 * 1024,  "authenticate": False, "inline_auth_hash": True }),
         ("rw_config",       {"capacity":  32 * 4 * 1024}),
         ("ro_cfg_fs",       {"capacity":  64 * 4 * 1024,  "authenticate": False}),
-        ("ro_fs",           {"capacity": 486 * 4 * 1024,  "authenticate": False})
+        ("ro_fs",           {"capacity": 238 * 4 * 1024,  "authenticate": False})
     ]
 }

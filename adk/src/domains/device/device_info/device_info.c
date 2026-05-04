@@ -14,7 +14,8 @@
 #include "local_name.h"
 
 static const char device_hardware_version[] = DEVICE_HARDWARE_VERSION;
-static const char device_firmware_version[] = DEVICE_FIRMWARE_VERSION  _DIC_STRINGIFY_(DEVICE_BUILDID);
+//static const char device_firmware_version[] = DEVICE_FIRMWARE_VERSION  _DIC_STRINGIFY_(DEVICE_BUILDID);
+static const char device_firmware_version[] = DEVICE_FIRMWARE_VERSION;
 static const char device_current_language[] = DEVICE_CURRENT_LANGUAGE;
 static const char device_software_version[] = DEVICE_SOFTWARE_VERSION;
 

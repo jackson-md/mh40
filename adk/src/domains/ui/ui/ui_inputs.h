@@ -26,6 +26,8 @@
     UI_INPUT(ui_input_voice_call_cycle) \
     UI_INPUT(ui_input_voice_call_join_calls) \
     UI_INPUT(ui_input_voice_call_join_calls_and_hang_up) \
+    UI_INPUT(ui_input_voice_call_short_press_handle) \
+    UI_INPUT(ui_input_voice_call_long_press_handle) \
     UI_INPUT(ui_input_toggle_play_pause = UI_INPUTS_MEDIA_PLAYER_MESSAGE_BASE)  \
     UI_INPUT(ui_input_play)  \
     UI_INPUT(ui_input_pause)  \
@@ -49,6 +51,7 @@
     UI_INPUT(ui_input_sm_power_on) \
     UI_INPUT(ui_input_sm_power_off) \
     UI_INPUT(ui_input_disable_touchpad) \
+    UI_INPUT(ui_input_dut_mode) \
     UI_INPUT(ui_input_volume_stop = UI_INPUTS_VOLUME_MESSAGE_BASE) \
     UI_INPUT(ui_input_volume_down_start) \
     UI_INPUT(ui_input_volume_up_start) \
@@ -63,6 +66,9 @@
     UI_INPUT(ui_input_disable_multipoint) \
     UI_INPUT(ui_input_enable_sass_connection_switch) \
     UI_INPUT(ui_input_disable_sass_connection_switch) \
+    UI_INPUT(ui_input_app_pairing_enter_or_cancel) \
+    UI_INPUT(ui_input_app_mfb_button_double_click) \
+    UI_INPUT(ui_input_app_power_button_triple_click) \
     UI_INPUT(ui_input_connect_sink = UI_INPUTS_SINK_MESSAGE_BASE) \
     UI_INPUT(ui_input_disconnect_sink) \
     UI_INPUT(ui_input_pair_sink) \

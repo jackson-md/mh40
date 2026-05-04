@@ -72,6 +72,7 @@ const ui_provider_context_consumer_indicator_table_t headset_ui_leds_context_ind
                                                           .led.data.pattern = app_led_pattern_idle,
                                                           .led.priority = LED_PRI_LOW,
                                                           .led.local_only = TRUE }},
+
     {.provider=ui_provider_app_sm,
      .context=context_app_sm_idle_connected,            { .led.action = LED_START_PATTERN,
                                                           .led.data.pattern = app_led_pattern_idle_connected,
@@ -86,11 +87,13 @@ const ui_provider_context_consumer_indicator_table_t headset_ui_leds_context_ind
 
 const ui_event_indicator_table_t headset_ui_leds_table[] =
 {
+#if 0
     {.sys_event=POWER_ON,                               { .led.action = LED_START_PATTERN,
                                                           .led.data.pattern = app_led_pattern_power_on,
                                                           .led.priority = LED_PRI_EVENT,
                                                           .led.local_only = TRUE },
                                                           .await_indication_completion = TRUE },
+#endif
 
     {.sys_event=POWER_OFF,                              { .led.action = LED_START_PATTERN,
                                                           .led.data.pattern = app_led_pattern_power_off,
@@ -98,20 +101,50 @@ const ui_event_indicator_table_t headset_ui_leds_table[] =
                                                           .led.local_only = TRUE },
                                                           .await_indication_completion = TRUE },
 
+#ifdef ENABLE_APP_BATTERY_CHECK_LED
+    {.sys_event=INN_BATTERY_LEVEL_HIGH,                 { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_high,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+
+    {.sys_event=INN_BATTERY_LEVEL_MEDIUM,               { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_medium,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+
+    {.sys_event=INN_BATTERY_LEVEL_LOW,                  { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_low,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+#endif
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+    {.sys_event=INN_BATTERY_LOW_WARNING_LED,            { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_low_warning,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+#endif
+#if 0
     {.sys_event=TELEPHONY_CALL_CONNECTION_FAILURE,      { .led.action = LED_START_PATTERN,
                                                           .led.data.pattern = app_led_pattern_error,
-                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.priority = LED_PRI_LOW,
                                                           .led.local_only = TRUE}},
 
     {.sys_event=TELEPHONY_ERROR,                        { .led.action = LED_START_PATTERN,
                                                           .led.data.pattern = app_led_pattern_error,
-                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.priority = LED_PRI_LOW,
                                                           .led.local_only = TRUE}},
 
     {.sys_event=AV_ERROR,                               { .led.action = LED_START_PATTERN,
                                                           .led.data.pattern = app_led_pattern_error,
-                                                          .led.priority = LED_PRI_EVENT}},
+                                                          .led.priority = LED_PRI_LOW}},
+#endif
 
+#if 0
     {.sys_event=CHARGER_MESSAGE_DETACHED,               { .led.action = LED_CANCEL_FILTER,
                                                           .led.data.filter = NULL,
                                                           .led.priority = LED_PRI_MEDIUM,
@@ -136,7 +169,220 @@ const ui_event_indicator_table_t headset_ui_leds_table[] =
                                                           .led.data.filter = app_led_filter_charging_low,
                                                           .led.priority = LED_PRI_MEDIUM,
                                                           .led.local_only = TRUE}},
+#endif
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+    {.sys_event=CHARGER_MESSAGE_ATTACHED,               { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charging_led,
+                                                          .led.priority = LED_PRI_MEDIUM,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+
+    {.sys_event=CHARGER_MESSAGE_DETACHED,               { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charge_detached,
+                                                          .led.priority = LED_PRI_MEDIUM,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+
+    {.sys_event=INN_APP_BATTERY_CHARGE_COMPLETE,        { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charge_completed,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+#if 0
+    {.sys_event=CHARGER_MESSAGE_COMPLETED,              { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charge_completed,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+#endif
+#endif
+    #if 0
+    {.sys_event=CHARGER_MESSAGE_CHARGING_OK,            { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charging_led,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+
+    {.sys_event=CHARGER_MESSAGE_CHARGING_LOW,           { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charging_led,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+#endif
+
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+    {.sys_event=INN_ENTER_DUT_LED,                      { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_DUT,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+#endif
+
+#ifdef ENABLE_APP_OTA_LED
+    {.sys_event=INN_OTA_PROCESSING_LED,                            { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_OTA,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+
+    {.sys_event=INN_OTA_COMPLETE_LED,                   { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_battery_charge_detached,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE},
+                                                          .await_indication_completion = TRUE },
+#endif
+
+#ifdef ENABLE_APP_FACTORY_RESET
+    {.sys_event=INN_APP_FACTORY_RESET,                  { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_factory_reset,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+#endif
+
+#if 0
+    {.sys_event=TELEPHONY_CONNECTED,                    { .led.action = LED_START_PATTERN,
+                                                          .led.data.pattern = app_led_pattern_idle_connected,
+                                                          .led.priority = LED_PRI_EVENT,
+                                                          .led.local_only = TRUE },
+                                                          .await_indication_completion = TRUE },
+#endif
 };
+
+#ifdef ENABLE_APP_BATTERY_CHECK_LED
+uint8 get_LED_Battery_High_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_BATTERY_LEVEL_HIGH)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_Battery_High_LEDIndex : %d", index);
+    return index;
+}
+
+uint8 get_LED_Battery_Medium_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_BATTERY_LEVEL_MEDIUM)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_Battery_Medium_LEDIndex : %d", index);
+    return index;
+}
+
+uint8 get_LED_Battery_Low_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_BATTERY_LEVEL_LOW)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_Battery_Low_LEDIndex : %d", index);
+    return index;
+}
+#endif
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+uint8 get_LED_Battery_Low_Warning_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_BATTERY_LOW_WARNING_LED)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_Battery_Low_Warning_LEDIndex : %d", index);
+    return index;
+}
+#endif
+
+#ifdef ENABLE_APP_OTA_LED
+uint8 get_LED_APP_OTA_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_OTA_PROCESSING_LED)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_APP_OTA_LEDIndex : %d", index);
+    return index;
+}
+
+uint8 get_LED_App_Idle_Connected_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_OTA_COMPLETE_LED)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_App_Idle_Connected_LEDIndex : %d", index);
+    return index;
+}
+#endif
+
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+uint8 get_LED_App_Enter_DUT_LEDIndex(void)
+{
+    uint8 index = 0;
+    uint8 i;
+
+    for(i=0; i< sizeof(headset_ui_leds_table)/sizeof(ui_event_indicator_table_t); i++)
+    {
+        if(headset_ui_leds_table[i].sys_event == INN_ENTER_DUT_LED)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    DEBUG_LOG_INFO("get_LED_blink_4times_LEDIndex : %d", index);
+    return index;
+}
+#endif
 
 uint8 HeadsetLedsConfigTable_GetSize(void)
 {

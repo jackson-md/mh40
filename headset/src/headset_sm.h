@@ -99,6 +99,68 @@ typedef struct
     bool auto_poweron:1;                /*!< Auto power on flag */
 } smTaskData;
 
+#ifdef ENABLE_APP_MD_GAIA
+typedef enum
+{
+    AUTO_OFF_TIMEOUT_NEVER_ID 		= 0x01,
+    AUTO_OFF_TIMEOUT_30MIN_ID 		= 0x03,
+    AUTO_OFF_TIMEOUT_1HOUR_ID 		= 0x04,
+    AUTO_OFF_TIMEOUT_3HOUR_ID 		= 0x05,
+    AUTO_OFF_TIMEOUT_30MIN    		= 0x1E,
+    AUTO_OFF_TIMEOUT_1HOUR    		= 0x3C,
+    AUTO_OFF_TIMEOUT_3HOUR    		= 0xB4,
+    AUTO_OFF_TIMEOUT_NEVER    		= 0xFF,
+    AUTO_OFF_GET_TIMEOUT_TIMER_ID  	= 0xFF,
+}AUTO_OFF_SETTING_PARAMETER;
+
+typedef enum
+{
+    EQ_MODE_MIN             = 0x00,
+    EQ_MODE_BASS_BOOST 		= 0x01,
+    EQ_MODE_BASS_CUT 		= 0x02,
+    EQ_MODE_PODCAST 		= 0x03,
+    EQ_MODE_OFF             = 0x04,
+    EQ_MODE_AUDIOPHILE      = 0x05,
+    EQ_MODE_MAX             = 0x06,
+    EQ_MODE_BASS_BOOST_ID   = 0x01,
+    EQ_MODE_BASS_CUT_ID 	= 0x02,
+    EQ_MODE_PODCAST_ID 		= 0x03,
+    EQ_MODE_OFF_ID          = 0x04,
+    EQ_MODE_AUDIOPHILE_ID   = 0x05,
+    EQ_MODE_GET_STATUS_ID   = 0xFF,
+}EQ_MODE_SETTING;
+
+typedef enum
+{
+    EQ_OFF_BANK_ID             = 0x00,
+    EQ_BASS_BOOST_BANK_ID      = 0X01,
+    EQ_BASS_CUT_BANK_ID        = 0X02,
+    EQ_PODCAST_BANK_ID         = 0X03,
+    EQ_AUDIOPHILE_BANK_ID      = 0X04,
+}EQ_BANK_ID;
+
+typedef enum
+{
+    SIDETONE_SETTING_MIN            = 0x00,
+    SIDETONE_SETTING_DISABLE 		= 0x01,
+    SIDETONE_SETTING_ENABLE 		= 0x02,
+    SIDETONE_SETTING_MAX            = 0x03,
+    SIDETONE_GET_STATUS_ID          = 0xFF,
+}SIDETONE_SETTING;
+
+#ifdef ENABLE_APP_MIC_MUTE
+typedef enum
+{
+    MIC_MUTE_CONTROL_MIN               = 0x00,
+    MIC_MUTE_CONTROL_DISABLE           = 0x01,
+    MIC_MUTE_CONTROL_ENABLE            = 0x02,
+    MIC_MUTE_CONTROL_MAX               = 0x03,
+    MIC_MUTE_CONTROL_GET_STATUS_ID     = 0xFF,
+}MIC_MUTE_CONTROL_SETTING;
+#endif
+
+#endif
+
 /*!< Application state machine. */
 extern smTaskData headset_sm;
 
@@ -134,6 +196,53 @@ bool headsetSmDisconnectLink(void);
 
 /*! \brief Method to handle topology stop confirmation. */
 bool headetSmHandleTopologyStopCfm(Message message);
+
+/*20221010 Add by Ou --- start ---*/
+void appHeadsetSetState(headsetState new_state);
+extern headsetState appHeadsetGetState(void);
+extern void appHeadsetSMStartIdleTimer(void);
+extern void appHeadsetSMStopIdleTimer(void);
+extern void appHeadsetSmPowerOff(void);
+/*20221010 Add by Ou ---  end  ---*/
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+extern void appCharingComplteteHandle(void);
+#endif
+
+#ifdef ENABLE_APP_MD_GAIA
+extern void appSmReboot_Delay(void);
+extern void set_appConfigIdleTimeoutMs_HandsetConected(uint8 timer);
+extern uint32 appConfigIdleTimeoutMs_HandsetConected(void);
+extern uint8 appGetEqmode(void);
+extern bool appHeadSetEqMode(uint8 mode);
+extern void appEnableSideTone(uint8 val);
+extern uint8 appGetSidetoneStatus(void);
+extern void appGaiaRestoreDefaultSetting(void);
+extern void appRestoreDefaultSetting(void);
+extern void appPoweroffStorePskeyData(void);
+extern void ChangeLocalName(void *param);
+extern void appRestoreDeviceName(void);
+#endif
+
+#ifdef ENABLE_APP_HID_COMMAND
+extern void appHeadsetSmHandlePowerOn(void);
+#endif
+
+#ifdef ENABLE_APP_MIC_MUTE
+extern void appSetMicMuteFlag(bool val);
+extern uint8 appGetMicMuteControlStatus(void);
+extern void appSetMicMuteControlStatus(uint8 status);
+#endif
+
+#ifdef ENABLE_APP_POWEROFF_DISPLAY_DISCONNECTED_PROMPT
+extern void appSetEnablePlayDisconnectPromptFlag(bool val);
+extern bool appGetEnablePlayDisconnectPromptFlag(void);
+#endif
+
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+extern void appGaiaConnectDeviceCancelTimer(void);
+extern void appGaiaConnectDeviceStartTimer(void);
+#endif
 
 #endif /* HEADSET_SM_H_ */
 

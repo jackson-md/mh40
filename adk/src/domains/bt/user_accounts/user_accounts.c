@@ -219,6 +219,7 @@ uint16 UserAccounts_AddAccountKey(const uint8* account_key, uint16 account_key_l
             size_t account_keys_size = 0;
             uint16 duplicate_account_key_index = 0xFF; /* Invalid Index as AKI varies from 0 to (MAX_NUM_ACCOUNT_KEYS-1) */
             uint16 count = 0;
+            uint16 num_keys = 0;
             user_account_key_info_t *buffer = PanicUnlessMalloc(sizeof(user_account_key_info_t));
 
             memset(buffer, 0x00, sizeof(user_account_key_info_t));
@@ -242,6 +243,12 @@ uint16 UserAccounts_AddAccountKey(const uint8* account_key, uint16 account_key_l
                             added_account_key_index = count;
                             break;
                         }
+                        num_keys++;
+                    }
+                    else
+                    {
+                        /* No more valid account keys stored in PS */
+                        break;
                     }
                 }
 
@@ -251,25 +258,93 @@ uint16 UserAccounts_AddAccountKey(const uint8* account_key, uint16 account_key_l
                     DEBUG_LOG("User Accounts : No duplicate account key found. Add to existing list");
                     
                     /* If list is not already full, add to the account key list */
-                    for(count=0;count<MAX_NUM_ACCOUNT_KEYS;count++)
+                    if(num_keys < MAX_NUM_ACCOUNT_KEYS)
                     {
-                        if(buffer->account_key_index[count].num_handsets_linked == 0)
+                        /* If the account key list is not full then only account key positions from 0 to num_keys -1
+                           are utilized. The num_keys should be free to use. Store the new account key */
+                        if(buffer->account_key_index[num_keys].num_handsets_linked == 0)
                         {
                             user_account_key_index_t account_key_index;
 
                             account_key_index.num_handsets_linked = 1;
                             account_key_index.account_key_type = account_key_type;
                             account_key_index.account_key_len = account_key_len;
-                            account_key_index.account_key_start_loc = count*MAX_USER_ACCOUNT_KEY_LEN;
+                            account_key_index.account_key_start_loc = num_keys*MAX_USER_ACCOUNT_KEY_LEN;
 
-                            memcpy(&buffer->account_key_index[count], &account_key_index, sizeof(user_account_key_index_t));
-                            memcpy(&buffer->account_keys[count*MAX_USER_ACCOUNT_KEY_LEN], account_key, account_key_len);
-                            added_account_key_index = count;
-                            break;                            
+                            memcpy(&buffer->account_key_index[num_keys], &account_key_index, sizeof(user_account_key_index_t));
+                            memcpy(&buffer->account_keys[num_keys*MAX_USER_ACCOUNT_KEY_LEN], account_key, account_key_len);
+                            added_account_key_index = num_keys;
+
+                            /* Update account key Index */
+                            for(count = num_keys; count > 0 ; count--)
+                            {
+                                memcpy(&buffer->account_key_index[count], &buffer->account_key_index[count-1], sizeof(user_account_key_index_t));
+                            }
+
+                            memcpy(&buffer->account_key_index[0], &account_key_index, sizeof(user_account_key_index_t));
+
+                            /* Update number of account keys */
+                            num_keys++;
+
+                            DEBUG_LOG("User Accounts : Account added at the new index. Number of account keys: %d", num_keys);
                         }
                     }
+                    else if(num_keys == MAX_NUM_ACCOUNT_KEYS)
+                    {
+                        /* Account key index will point to most recently used account key to least recently account key.
+                           Account key Index 0 will always point to the most recently used account key and account key Index
+                           and MAX_NUM_ACCOUNT_KEYS -1 index will have least recently used location of account key
+                         */
+                        user_account_key_index_t temp;
+
+                        memcpy(&temp, &buffer->account_key_index[MAX_NUM_ACCOUNT_KEYS-1], sizeof(user_account_key_index_t));
+
+                        /* Copy the account key */
+                        memcpy(&buffer->account_keys[temp.account_key_start_loc], account_key, MAX_USER_ACCOUNT_KEY_LEN);
+
+                        /* Update account key Index */
+                        for(count = num_keys; count > 1; count--)
+                        {
+                            memcpy(&buffer->account_key_index[count-1], &buffer->account_key_index[count-2], sizeof(user_account_key_index_t));
+                        }
+
+                        memcpy(&buffer->account_key_index[0], &temp,sizeof(user_account_key_index_t));
+                        added_account_key_index = 0;
+
+                        DEBUG_LOG("User Accounts : Account added at LRU account key index.");
+                    }
+                    else
+                    {
+                        /* Should not reach here */
+                        DEBUG_LOG("User Accounts : Account key number mismatch!");
+                    }
+
+                    /* Warning : Key at OWNER_USER_ACCOUNT_KEY_INDEX shall not be replaced when device runs out of memory */
                 }
-   
+                else
+                {
+                    DEBUG_LOG("User Accounts : Duplicate account key is found");
+                    /* Duplicate account key found. Remove that and update index 0 to duplicate key */
+                    if(duplicate_account_key_index != 0)
+                    {
+                        /* Account key index will point to most recently used account key to least recently account key.
+                         * Account key Index 0 will always point to the most recently used account key and account key Index
+                         * and MAX_FAST_PAIR_ACCOUNT_KEYS-1 index will have least recently used location of account key
+                         */
+                        user_account_key_index_t temp;
+                        memcpy(&temp, &buffer->account_key_index[duplicate_account_key_index], sizeof(user_account_key_index_t));
+
+                        /* Update account key Index */
+                        for(count = duplicate_account_key_index; count > 0; count--)
+                        {
+                            memcpy(&buffer->account_key_index[count], &buffer->account_key_index[count-1], sizeof(user_account_key_index_t));
+                        }
+
+                        memcpy(&buffer->account_key_index[0], &temp,sizeof(user_account_key_index_t));
+                        added_account_key_index = 0;
+                    }
+                }
+
                 /* Store Account key Index and Account keys to PS Store */
                 Device_SetProperty(my_device, device_property_user_account_key_index, &buffer->account_key_index, sizeof(buffer->account_key_index));
                 Device_SetProperty(my_device, device_property_user_account_keys, &buffer->account_keys, sizeof(buffer->account_keys));
@@ -285,7 +360,7 @@ uint16 UserAccounts_AddAccountKey(const uint8* account_key, uint16 account_key_l
                 account_key_index.account_key_type = account_key_type;
                 account_key_index.account_key_len = account_key_len;
                 account_key_index.account_key_start_loc = 0;
-                added_account_key_index = 0;
+                added_account_key_index = OWNER_USER_ACCOUNT_KEY_INDEX;
                 /* This is the first account key getting written, add it to the first slot */
                 memcpy(&buffer->account_key_index[0], &account_key_index, sizeof(user_account_key_index_t));
                 memcpy(&buffer->account_keys[0], account_key, account_key_len);
@@ -293,7 +368,7 @@ uint16 UserAccounts_AddAccountKey(const uint8* account_key, uint16 account_key_l
                 Device_SetProperty(my_device, device_property_user_account_keys, &buffer->account_keys, sizeof(buffer->account_keys));
                 free(buffer);
                 DeviceDbSerialiser_Serialise();
-                DEBUG_LOG("Added acconut key index %d", added_account_key_index);
+                DEBUG_LOG("Added acconut key index %d (owner account key)", added_account_key_index);
             }
         }
         else

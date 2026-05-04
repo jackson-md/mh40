@@ -105,10 +105,13 @@ inline static void hfpProfile_SendBievCommand(void)
     for_all_hfp_instances(instance, &iterator)
     {
         hfpState state = appHfpGetState(instance);
-        
+
         DEBUG_LOG_VERBOSE("hfpProfile_SendBievCommand instance %d lap 0x%x state enum:hfpState:%d hf_ind enum:hfp_indicators_assigned_id:%d",
                 iterator.index, instance->ag_bd_addr.lap, state, instance->bitfields.hf_indicator_assigned_num);
+
+#ifndef ENABLE_APP_NOTIFY_BATTERY_PRECENT
         if(instance->bitfields.hf_indicator_assigned_num == hf_battery_level)
+#endif
         {
             if(HfpProfile_StateIsSlcConnected(state))
             {
@@ -200,5 +203,22 @@ void HfpProfile_EnableBatteryHfInd(hfpInstanceTaskData *instance, uint8 indicato
     }
 }
 
+#ifdef ENABLE_APP_MD_GAIA
+uint8 AppGaiaGethfpProfileBatteryLevel(void)
+{
+    /*--- Update batterylevel to phone --- start ---*/
+    hfpProfile_SendBievCommand();
+    /*--- Update batterylevel to phone ---  end  ---*/
+
+    return hfpProfile_GetBatteryLevel();
+}
+#endif
+
+#ifdef ENABLE_APP_NOTIFY_BATTERY_PRECENT
+void AppNotifyBatteryPrecent(void)
+{
+    hfpProfile_SendBievCommand();
+}
+#endif
 
 #endif /* !HAVE_NO_BATTERY */

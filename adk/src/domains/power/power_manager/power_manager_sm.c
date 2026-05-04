@@ -65,7 +65,11 @@ static void appPowerEnterPowerStateTerminatingClientsResponded(void)
     {
         if(PowerGetTaskData()->user_initiated_shutdown)
         {
+#ifdef ENABLE_APP_FIX_PO_NOISE
+            SystemState_EmergencyShutdown();
+#else
             SystemState_Shutdown();
+#endif
         }
         else
         {

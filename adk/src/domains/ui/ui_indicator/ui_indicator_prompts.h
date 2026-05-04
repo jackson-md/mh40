@@ -126,4 +126,8 @@ void UiPrompts_SetUserPromptDataFunction(ui_prompts_data_fn fn, MessageId id);
 /*! brief Used by a prompt user to remove a custom handler for a given message ID */
 void UiPrompts_ClearUserPromptDataFunction(MessageId id);
 
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+void UiPrompts_SendEvent(MessageId id, uint32 delay);
+#endif
+
 #endif // UI_PROMPTS_H

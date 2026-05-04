@@ -24,6 +24,10 @@ DEBUG_LOG_DEFINE_LEVEL_VAR
 #include "gaia_framework_data_channel.h"
 #include "system_reboot.h"
 
+#ifdef ENABLE_APP_MD_GAIA
+#include "headset_test.h"
+#endif
+
 #define NUM_OF_BYTES_PER_FEATURE 2
 #define MORE_TO_COME_PAYLOAD_LENGTH 1
 #define USER_FEATURE_RESPONSE_MAX_TX_PKT_SIZE (48)
@@ -282,12 +286,23 @@ static void gaiaCorePlugin_GetSupportedFeaturesNext(GAIA_TRANSPORT *t)
 
 static void gaiaCorePlugin_GetSerialNumber(GAIA_TRANSPORT *t)
 {
+#ifndef ENABLE_APP_MD_GAIA
     const char * response_payload = DeviceInfo_GetSerialNumber();
     uint8 response_payload_length = strlen(response_payload);
 
     DEBUG_LOG("gaiaCorePlugin_GetSerialNumber");
 
     GaiaFramework_SendResponse(t, GAIA_CORE_FEATURE_ID, get_serial_number, response_payload_length, (uint8 *)response_payload);
+#else
+    uint8 ps_data[32] = {0};
+    uint16 ps_size = 0x00;
+
+    appGetPsSerialNumber(&ps_size, ps_data);
+
+    DEBUG_LOG("gaiaCorePlugin_GetSerialNumber");
+
+    GaiaFramework_SendResponse(t, GAIA_CORE_FEATURE_ID, get_serial_number, ps_size, (uint8 *)ps_data);
+#endif
 }
 
 static void gaiaCorePlugin_GetVariant(GAIA_TRANSPORT *t)

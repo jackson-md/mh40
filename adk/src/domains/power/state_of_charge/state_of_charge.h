@@ -103,6 +103,14 @@ void Soc_Unregister(Task task);
 */
 uint8 Soc_GetBatterySoc(void);
 
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+/*!
+    \brief Get battery save percentage.
+    \return Returns state of save percentage.
+*/
+uint16 Soc_GetSaveBatteryVoltage(void);
+#endif
+
 /*! 
     \brief Initialize Battery SoC Config table.
     \param config_table pointer to soc_lookup_t structure array 

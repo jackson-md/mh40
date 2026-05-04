@@ -168,5 +168,14 @@ bool WiredAudioDetect_StopMonitoring(void)
     return status;
 }
 
+#ifdef ENABLE_APP_LINE_IN_AUDIO
+bool IsAppLineInAvailable(void)
+{
+    wiredAudioSourceTaskData *sp = WiredAudioSourceGetTaskData();
+
+    return !IsLineInAvailable(sp);
+}
+#endif
+
 #endif /* INCLUDE_WIRED_ANALOG_AUDIO || INCLUDE_A2DP_ANALOG_SOURCE */
 

@@ -215,13 +215,11 @@ static uint8 selectOptimalSamplingRate(uint8 remote_sampling_rates, uint8 local_
 
     if (areSamplingRatesCompatible(remote_sampling_rates, local_sampling_rates))
     {
-        /* selectSamplingRateIfSupportedByBothSides() will modify remote_sampling_rates if it finds a matching rate,
-           preventing further matches, so ensure each rate is checked in descending order of preference. */
-        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_192_mask);
-        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_96_twm_mask);
-        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_96_mask);
-        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_48_mask);
         selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_44_1_mask);
+        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_48_mask);
+        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_96_mask);
+        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_96_twm_mask);
+        selectSamplingRateIfSupportedByBothSides(&remote_sampling_rates, local_sampling_rates, aptx_ad_sample_rate_192_mask);
         sampling_rate = remote_sampling_rates;
     }
     /* Compatibility of sampling rates has been checked during capability exchange, so this should never be called */

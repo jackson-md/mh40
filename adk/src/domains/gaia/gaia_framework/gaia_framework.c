@@ -24,6 +24,10 @@ DEBUG_LOG_DEFINE_LEVEL_VAR
 
 #define GAIA_STATUS_NONE (0xFE)
 
+#ifdef ENABLE_APP_MD_GAIA
+#define GAIA_MD_STATUS_OK (0xF1)
+#define GAIA_MD_STATUS_FAIL (0xF0)
+#endif
 
 bool GaiaFramework_Init(Task init_task)
 {
@@ -161,5 +165,75 @@ void GaiaFramework_SendNotificationWithTransport(GAIA_TRANSPORT *t, gaia_feature
         DEBUG_LOG_WARN("GaiaFramework_SendNotificationWithTransport, feature_id %u, notification_id %u not active on transport %p", feature_id, notification_id, t);
 
 }
+
+#ifdef ENABLE_APP_MD_GAIA
+void GaiaFramework_MD_SendResponse(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 pdu_id, uint16 length, const uint8 *payload)
+{
+    DEBUG_LOG("GaiaFramework_SendResponse, feature_id %u, pdu_id %u", feature_id, pdu_id);
+
+    uint16 command_id = MD_GaiaFramework_BuildCommandId(MD_FEATURE_ID, pdu_id);
+    DEBUG_LOG("command_id: %u", command_id);
+    GaiaSendPacket(t, MD_APP_VENDOR_ID, command_id, GAIA_MD_STATUS_OK, length, payload);
+}
+
+void GaiaFramework_MD_SendResponse_Fail(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 pdu_id, uint16 length, const uint8 *payload)
+{
+    DEBUG_LOG("GaiaFramework_MD_SendResponse_Fail, feature_id %u, pdu_id %u", feature_id, pdu_id);
+
+    uint16 command_id = MD_GaiaFramework_BuildCommandId(MD_FEATURE_ID, pdu_id);
+    DEBUG_LOG("command_id: %u", command_id);
+    GaiaSendPacket(t, MD_APP_VENDOR_ID, command_id, GAIA_MD_STATUS_FAIL, length, payload);
+}
+
+void GaiaFramework_MD_SendError(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 pdu_id, uint8 status_code)
+{
+    DEBUG_LOG("GaiaFramework_SendError, feature_id %u, pdu_id %u, status_code %u", feature_id, pdu_id, status_code);
+
+    uint16 command_id = MD_GaiaFramework_BuildCommandId(MD_FEATURE_ID, pdu_id);
+    GaiaSendPacket(t, MD_APP_VENDOR_ID, command_id, GAIA_STATUS_NONE, sizeof(status_code), &status_code);
+}
+
+static void gaiaFramework_MD_SendNotificationToEndpoint(gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload, bool is_data)
+{
+    //if (GaiaFrameworkFeature_IsNotificationsActive(feature_id))
+    {
+        /* Find transports that have notifications enabled for this feature */
+        gaia_transport_index index = 0;
+        GAIA_TRANSPORT *t = Gaia_TransportIterate(&index);
+        while (t)
+        {
+            if (GaiaFrameworkFeature_IsNotificationsActive(t,feature_id))
+            {
+                uint32_t notifications = Gaia_TransportGetClientData(t);
+                if (notifications & 1UL << feature_id)
+                {
+                    uint16 command_id = MD_GaiaFramework_BuildCommandId(feature_id, notification_id);
+                    DEBUG_LOG("GaiaFramework_SendNotification, feature_id %02x, notification_id %02x, command_id %02x", feature_id, notification_id, command_id);
+
+                    if (is_data)
+                        Gaia_SendDataPacket(t, MD_APP_VENDOR_ID, command_id, GAIA_MD_STATUS_OK, length, payload);
+                    else
+                        GaiaSendPacket(t, MD_APP_VENDOR_ID, command_id, GAIA_MD_STATUS_OK, length, payload);
+                }
+            }
+            else
+                DEBUG_LOG("GaiaFramework_MD_SendNotification, feature_id %u, notification_id %u not active", feature_id, notification_id);
+            t = Gaia_TransportIterate(&index);
+        }
+    }
+    //else
+     //   DEBUG_LOG("GaiaFramework_MD_SendNotification, feature_id %u, notification_id %u not active", feature_id, notification_id);
+}
+
+void GaiaFramework_MD_SendNotification(gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload)
+{
+    gaiaFramework_MD_SendNotificationToEndpoint(feature_id, notification_id, length, payload, FALSE);
+}
+
+void GaiaFramework_MD_SendDataNotification(gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload)
+{
+    gaiaFramework_MD_SendNotificationToEndpoint(feature_id, notification_id, length, payload, TRUE);
+}
+#endif
 
 #endif /* INCLUDE_GAIA */

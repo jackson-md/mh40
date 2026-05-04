@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project path="" type="list">
-    <file path="../../../prompts/sbc/connected.sbc"/>
-    <file path="../../../prompts/sbc/disconnected.sbc"/>
-    <file path="../../../prompts/sbc/pairing.sbc"/>
-    <file path="../../../prompts/sbc/pairing_failed.sbc"/>
-    <file path="../../../prompts/sbc/pairing_successful.sbc"/>
-    <file path="../../../prompts/sbc/power_off.sbc"/>
-    <file path="../../../prompts/sbc/power_on.sbc"/>
+<project type="list" name="ro_fs">
     <file path="../../../src/usb_msc/usb_data"/>
     <file path="../../../src/usb_msc/usb_fat"/>
     <file path="../../../src/usb_msc/usb_root"/>
@@ -17,14 +10,28 @@
     <file path="../../../../audio/qcc514x_qcc304x/kalimba_ROM_7120/kymera/prebuilt_dkcs/streplus_rom_release/download_va_graph_manager.edkcs"/>
     <file path="../../../../audio/qcc514x_qcc304x/kalimba_ROM_7120/kymera/prebuilt_dkcs/streplus_rom_release/download_volume_control.edkcs"/>
     <configurations>
-        <configuration name="filesystem" options="build|deploy">
+        <configuration name="filesystem" options="build|deploy|default">
             <devkitConfiguration>filesystem</devkitConfiguration>
-            <devkitGroup>kitres://{0F0E0182-5E9B-4D6B-88F4-133D2574D14C}</devkitGroup>
             <deployProject>deploy</deployProject>
             <property name="FS_ROOT">..\customer_ro_filesystem</property>
             <property name="TYPE">customer_ro</property>
             <property name="system_label">QCC514X_CONFIG</property>
             <property name="CHIP_TYPE">qcc514x_qcc304x</property>
+            <target>device</target>
         </configuration>
     </configurations>
+    <targets>
+        <target name="device"/>
+    </targets>
+    <file path="../../../prompts/sbc/MD_Connect_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_Disconnect_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_FactoryReset_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_LowBat_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_Pairing_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_Power_Off_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_Power_On_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_Ring_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_VolumeMaxMin_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_MicMute_48K.sbc"/>
+    <file path="../../../prompts/sbc/MD_MicUnmute_48K.sbc"/>
 </project>

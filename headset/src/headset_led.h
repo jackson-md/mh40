@@ -74,6 +74,31 @@ extern const led_pattern_t app_led_pattern_streaming_aptx[];
 extern const led_pattern_t app_led_pattern_streaming_aptx_adaptive[];
 #endif
 
+#ifdef ENABLE_APP_BATTERY_CHECK_LED
+extern const led_pattern_t app_led_pattern_battery_high[];
+extern const led_pattern_t app_led_pattern_battery_medium[];
+extern const led_pattern_t app_led_pattern_battery_low[];
+#endif
+
+extern const led_pattern_t app_led_pattern_battery_low_warning[];
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+extern const led_pattern_t app_led_pattern_battery_charging_led[];
+extern const led_pattern_t app_led_pattern_battery_charge_completed[];
+extern const led_pattern_t app_led_pattern_battery_charge_detached[];
+#endif
+
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+extern const led_pattern_t app_led_pattern_DUT[];
+#endif
+
+#ifdef ENABLE_APP_OTA_LED
+extern const led_pattern_t app_led_pattern_OTA[];
+#endif
+
+#ifdef ENABLE_APP_FACTORY_RESET
+extern const led_pattern_t app_led_pattern_factory_reset[];
+#endif
 //!@}
 
 

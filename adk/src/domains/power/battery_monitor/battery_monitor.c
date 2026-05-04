@@ -26,6 +26,16 @@ DEBUG_LOG_DEFINE_LEVEL_VAR
 #include <logging.h>
 #include <stdlib.h>
 
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+#include "state_of_charge.h"
+#include "power_manager.h"
+#include "headset_sm.h"
+#include "headset_test.h"
+#include "charger_monitor.h"
+#include "kymera_tones_prompts.h"
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_ENUM(battery_messages)
 
@@ -97,7 +107,110 @@ enum battery_internal_messages
     MESSAGE_BATTERY_INTERNAL_MEASUREMENT_TRIGGER = 1,
 
     MESSAGE_BATTERY_TEST_PROCESS_READING,
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+    MESSAGE_BATTERY_LOW_WARNING_LED,
+
+    MESSAGE_BATTERY_LOW_WARNING_PROMPT,
+
+    MESSAGE_BATTERY_LOW_POWEROFF,
+
+    MESSAGE_BATTERY_LEVEL_CHECK,
+#endif
 };
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+
+#define BATTERY_PRECENT_LOW_WARNING 0x04
+#define BATTERY_PRECENT_LOW_POWEROFF 0x00
+enum inn_app_battery_low_state
+{
+    INN_APP_BATTERY_LOW_INIT = 0x00,
+    INN_APP_BATTERY_LOW_WARING = 0x01,
+    INN_APP_BATTERY_LOW_POWEROFF = 0x02,
+};
+
+enum inn_app_battery_low_prompt_timer
+{
+    INN_APP_BATTERY_LOW_TIMER_INIT = 0x00,
+    INN_APP_BATTERY_LOW_TIMER_START = 0x01,
+    INN_APP_BATTERY_LOW_TIMER_30MIN = 0x02,
+    INN_APP_BATTERY_LOW_TIMER_15MIN = 0x03,
+    INN_APP_BATTERY_LOW_TIMER_7P5MIN = 0x04,
+    INN_APP_BATTERY_LOW_TIMER_3MIN = 0x05,
+};
+
+typedef struct
+{
+    uint8 low_battery_state;
+    uint8 battery_check_counter;
+    uint8 low_battery_prompt_timer;
+    uint16 record_battery_voltage;
+}BattertCheckData;
+
+static BattertCheckData g_AppBatteryCheckData = {0x00};
+
+static void innAppBatteryCheckRestParameter(void)
+{
+    g_AppBatteryCheckData.low_battery_state = INN_APP_BATTERY_LOW_INIT;
+    g_AppBatteryCheckData.battery_check_counter = 0x00;
+    g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_INIT;
+    g_AppBatteryCheckData.record_battery_voltage = Soc_GetSaveBatteryVoltage();
+}
+
+static void innAppBatteryLowHandle(void)
+{
+    uint16 voltage = appBatteryGetVoltageAverage();
+
+    DEBUG_LOG("innAppBatteryLowHandle voltage = %d", voltage);
+
+    if (voltage > g_AppBatteryCheckData.record_battery_voltage)
+    {
+        voltage = g_AppBatteryCheckData.record_battery_voltage;
+    }
+    else
+    {
+        g_AppBatteryCheckData.record_battery_voltage = voltage;
+    }
+
+    if ((voltage <= appConfigBatteryVoltageLow()) &&
+        (voltage > appConfigBatteryVoltageCritical()))
+    {
+        if (g_AppBatteryCheckData.low_battery_state != INN_APP_BATTERY_LOW_WARING)
+        {
+            g_AppBatteryCheckData.low_battery_state = INN_APP_BATTERY_LOW_WARING;
+            g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_START;
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_LED);
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT);
+            MessageSend(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_LED, NULL);
+            MessageSend(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL);
+        }
+    }
+    else if (voltage <= appConfigBatteryVoltageCritical())
+    {
+        if (g_AppBatteryCheckData.low_battery_state != INN_APP_BATTERY_LOW_POWEROFF)
+        {
+            g_AppBatteryCheckData.low_battery_state = INN_APP_BATTERY_LOW_POWEROFF;
+            appPowerBatteryLowLed();
+            appPowerBatteryLowPrompt();
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_LED);
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT);
+            MessageSendLater(&GetBattery()->task, MESSAGE_BATTERY_LOW_POWEROFF, NULL, D_SEC(2));
+        }
+    }
+    else if (voltage > appConfigBatteryVoltageLow())
+    {
+        if (g_AppBatteryCheckData.low_battery_state != INN_APP_BATTERY_LOW_INIT)
+        {
+            g_AppBatteryCheckData.low_battery_state = INN_APP_BATTERY_LOW_INIT;
+            g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_INIT;
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_POWEROFF);
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_LED);
+            MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT);
+        }
+    }
+}
+#endif
 
 /* TRUE if the current value is less than the threshold taking into account hysteresis */
 static bool ltThreshold(uint16 current, uint16 threshold, uint16 hysteresis)
@@ -366,6 +479,100 @@ static void appBatteryHandleMessage(Task task, MessageId id, Message message)
                 }                
                 break;
 
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+            case MESSAGE_BATTERY_LEVEL_CHECK:
+                {
+                    DEBUG_LOG_DEBUG("Charger_IsConnected: %d, Charger_IsCharging: %d" , Charger_IsConnected(), Charger_IsCharging());
+
+                    if (appHeadsetGetState() != HEADSET_STATE_LIMBO)
+                    {
+                        if (Charger_IsConnected() == FALSE)
+                        {
+                            innAppBatteryLowHandle();
+                        }
+                        else
+                        {
+                            if (g_AppBatteryCheckData.low_battery_state != INN_APP_BATTERY_LOW_INIT)
+                            {
+                                /*Place charning led*/
+                                g_AppBatteryCheckData.low_battery_state = INN_APP_BATTERY_LOW_INIT;
+                                g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_INIT;
+                                MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_POWEROFF);
+                                MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_LED);
+                                MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT);
+                            }
+                            break;
+                        }
+
+#ifdef ENABLE_APP_NOTIFY_BATTERY_PRECENT
+                        //AppNotifyBatteryPrecent();
+#endif
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LEVEL_CHECK, NULL, D_SEC(10));
+                    }
+                }
+                break;
+
+            case MESSAGE_BATTERY_LOW_WARNING_LED:
+                {
+                    appPowerBatteryLowLed();
+                    MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_LED, NULL, D_SEC(30));
+                    //MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_LED, NULL, D_SEC(1));
+                }
+                break;
+
+            case MESSAGE_BATTERY_LOW_WARNING_PROMPT:
+                {
+                    if (appKymeraIsPlayingPrompt() == TRUE)
+                    {
+                        MessageCancelAll(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT);
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, 500);
+                        break;
+                    }
+#if 1
+                    if (g_AppBatteryCheckData.low_battery_prompt_timer == INN_APP_BATTERY_LOW_TIMER_START)
+                    {
+                        appPowerBatteryLowPrompt();
+                        g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_30MIN;
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_SEC(1800));
+                    }
+                    else if (g_AppBatteryCheckData.low_battery_prompt_timer == INN_APP_BATTERY_LOW_TIMER_30MIN)
+                    {
+                        appPowerBatteryLowPrompt();
+                        g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_15MIN;
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_SEC(900));
+                    }
+                    else if (g_AppBatteryCheckData.low_battery_prompt_timer == INN_APP_BATTERY_LOW_TIMER_15MIN)
+                    {
+                        appPowerBatteryLowPrompt();
+                        g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_7P5MIN;
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_SEC(450));
+                    }
+                    else if (g_AppBatteryCheckData.low_battery_prompt_timer == INN_APP_BATTERY_LOW_TIMER_7P5MIN)
+                    {
+                        appPowerBatteryLowPrompt();
+                        g_AppBatteryCheckData.low_battery_prompt_timer = INN_APP_BATTERY_LOW_TIMER_3MIN;
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_SEC(180));
+                    }
+                    else if (g_AppBatteryCheckData.low_battery_prompt_timer == INN_APP_BATTERY_LOW_TIMER_3MIN)
+                    {
+                        appPowerBatteryLowPrompt();
+                        MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_SEC(180));
+                    }
+#else
+                    appPowerBatteryLowPrompt();
+                    //MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_MIN(5));
+                    MessageSendLater(&battery->task, MESSAGE_BATTERY_LOW_WARNING_PROMPT, NULL, D_SEC(10));
+#endif
+                }
+                break;
+
+            case MESSAGE_BATTERY_LOW_POWEROFF:
+                {
+                    appTestHeadsetPowerOff();
+                }
+                break;
+#endif
+
             default:
                 /* An unexpected message has arrived - must handle it */
                 UnexpectedMessage_HandleMessage(id);
@@ -491,5 +698,14 @@ void appBatteryTestResumeAdcMeasurements(void)
     
     appBatteryScheduleNextMeasurement(battery, 0);
 }
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+void appBatteryLevelCheck(void)
+{
+    innAppBatteryCheckRestParameter();
+    MessageCancelAll(&GetBattery()->task, MESSAGE_BATTERY_LEVEL_CHECK);
+    MessageSendLater(&GetBattery()->task, MESSAGE_BATTERY_LEVEL_CHECK, NULL, D_SEC(10));
+}
+#endif
 
 #endif /* !HAVE_NO_BATTERY */

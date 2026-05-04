@@ -203,4 +203,16 @@ void GaiaFramework_SendNotification(gaia_features_t feature_id, uint8 notificati
 void GaiaFramework_SendDataNotification(gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload);
 void GaiaFramework_SendNotificationWithTransport(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload);
 
+#ifdef ENABLE_APP_MD_GAIA
+/*!
+  just for MD Vendor ID send back
+*/
+void GaiaFramework_MD_SendResponse(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 pdu_id, uint16 length, const uint8 *payload);
+void GaiaFramework_MD_SendResponse_Fail(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 pdu_id, uint16 length, const uint8 *payload);
+void GaiaFramework_MD_SendError(GAIA_TRANSPORT *t, gaia_features_t feature_id, uint8 pdu_id, uint8 status_code);
+
+void GaiaFramework_MD_SendNotification(gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload);
+void GaiaFramework_MD_SendDataNotification(gaia_features_t feature_id, uint8 notification_id, uint16 length, const uint8 *payload);
+#endif
+
 #endif /* GAIA_FRAMEWORK_H_ */

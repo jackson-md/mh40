@@ -86,4 +86,6 @@ bool UiLeds_Init(Task init_task);
 */
 void UiLeds_NotifyUiIndication(uint16 led_index);
 
+void UiLeds_RefleshContex(void);
+
 #endif // UI_LEDS_H

@@ -62,6 +62,10 @@ enum telephony_domain_messages
     TELEPHONY_CALLER_ID_NOTIFICATION,
     TELEPHONY_TIMEOUT,
 
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+    INN_TELEPHONY_INCOMING_RINGTONE,
+#endif
+
     /*! This must be the final message */
     TELEPHONY_MESSAGE_END
 };

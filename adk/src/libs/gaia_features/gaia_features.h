@@ -13,6 +13,10 @@
 /*! @todo Move to the correct place */
 #define GAIA_V3_VENDOR_ID 0x001D
 
+#ifdef ENABLE_APP_MD_GAIA 
+  #define MD_APP_VENDOR_ID 0x099A 
+#endif 
+
 typedef enum
 {
     GAIA_CORE_FEATURE_ID = 0x00,                /*<! Gaia core plugin feature ID */

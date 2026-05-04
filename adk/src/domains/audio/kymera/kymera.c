@@ -59,6 +59,14 @@
 
 #include <opmsg_prim.h>
 
+#ifdef ENABLE_APP_MIC_MUTE
+#include "headset_sm.h"
+#endif
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+#include "headset_test.h"
+#endif
+
 
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_ENUM(app_kymera_internal_message_ids)
@@ -505,6 +513,14 @@ bool appKymeraScoStart(Sink audio_sink, appKymeraScoMode mode, uint8 wesco, int1
         if (audio_sink)
         {
             DEBUG_LOG("appKymeraScoStart, queue sink 0x%x", audio_sink);
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+            appSpeakerAmpMute();
+#endif
+
+#ifdef ENABLE_APP_SCO_AUTO_POWEROFF_TIMER
+            appHeadsetSMStopIdleTimer();
+#endif
             appKymeraScoStartHelper(audio_sink, info, wesco, volume_in_db, pre_start_delay, TRUE,
                                     synchronised_start, handler);
             return TRUE;
@@ -526,6 +542,14 @@ void appKymeraScoStop(void)
 {
     kymeraTaskData *theKymera = KymeraGetTaskData();
     DEBUG_LOG("appKymeraScoStop");
+
+#ifdef ENABLE_APP_MIC_MUTE
+    appSetMicMuteFlag(FALSE);
+#endif
+
+#ifdef ENABLE_APP_SCO_AUTO_POWEROFF_TIMER
+    appHeadsetSMStartIdleTimer();
+#endif
 
     MessageSendConditionally(&theKymera->task, KYMERA_INTERNAL_SCO_STOP, NULL, &theKymera->lock);
 }
@@ -583,6 +607,10 @@ static void appKymeraHandleInternalScoAudioSynchronised(void)
     {
         DEBUG_LOG("appKymeraHandleInternalScoAudioSynchronised");
         KymeraOutput_MuteMainChannel(FALSE);
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+        appSpeakerAmpUnMute();
+#endif
     }
 }
 

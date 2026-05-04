@@ -11,6 +11,24 @@ Copyright (c) 2019  Qualcomm Technologies International, Ltd.
 #define PIOM_NUM_PIOS  (96)
 #define PIOM_NUM_BANKS (PIOM_NUM_PIOS / 32)
 
+#define PIO2BANK(pio) ((uint16)((pio) / 32))
+#define PIO2MASK(pio) (1UL << ((pio) % 32))
+
+/* ----- ENABLE_APP_LOW_LEVEL_BUTTON --- start ---*/
+#define PIO2  2
+#define PIO3  3
+#define PIO4  4
+/* ----- ENABLE_APP_LOW_LEVEL_BUTTON ---- end ----*/
+
+#define PIO40  40
+#define PIO43  43
+
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+#define PIO42_CHOK  42
+#define PIO44_CHRG  44
+#define PIO15_CHEN  15
+#endif
 
 typedef enum
 {

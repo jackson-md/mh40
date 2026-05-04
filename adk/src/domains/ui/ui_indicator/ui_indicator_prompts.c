@@ -27,6 +27,11 @@
 
 #include "system_clock.h"
 
+#ifdef ENABLE_APP_POWEROFF_DISPLAY_DISCONNECTED_PROMPT
+#include "headset_sm.h"
+#include "telephony_messages.h"
+#endif
+
 #define DEFAULT_NO_REPEAT_DELAY         D_SEC(5)
 
 ui_prompts_task_data_t the_prompts;
@@ -152,6 +157,16 @@ static void uiPrompts_PlayPrompt(MessageId sys_event, rtime_t time_to_play, cons
 {
     DEBUG_LOG("uiPrompts_PlayPrompt sys_event=%d ttp=%d enabled=%d",
               sys_event, time_to_play, the_prompts.prompt_playback_enabled );
+
+#ifdef ENABLE_APP_POWEROFF_DISPLAY_DISCONNECTED_PROMPT
+    if (sys_event == TELEPHONY_DISCONNECTED)
+    {
+        if (appGetEnablePlayDisconnectPromptFlag() == FALSE)
+        {
+            return;
+        }
+    }
+#endif
 
     if (the_prompts.prompt_playback_enabled)
     {
@@ -463,3 +478,10 @@ void UiPrompts_ClearUserPromptDataFunction(MessageId id)
         }
     }
 }
+
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+void UiPrompts_SendEvent(MessageId id, uint32 delay)
+{
+    MessageSendLater(&the_prompts.task, id, NULL, delay);
+}
+#endif

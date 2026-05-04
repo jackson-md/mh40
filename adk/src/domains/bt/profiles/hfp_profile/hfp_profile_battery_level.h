@@ -61,4 +61,12 @@ void HfpProfile_EnableBatteryHfInd(hfpInstanceTaskData *instance, uint8 enable_b
 
 #endif /* !HAVE_NO_BATTERY */
 
+#ifdef ENABLE_APP_MD_GAIA
+extern uint8 AppGaiaGethfpProfileBatteryLevel(void);
+#endif
+
+#ifdef ENABLE_APP_NOTIFY_BATTERY_PRECENT
+extern void AppNotifyBatteryPrecent(void);
+#endif
+
 #endif /* HFP_PROFILE_BATTERY_LEVEL_H_ */

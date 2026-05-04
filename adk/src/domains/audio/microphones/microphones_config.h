@@ -29,13 +29,15 @@
   #define appConfigMic0AudioChannel()             (AUDIO_CHANNEL_SLOT_2)
   //!@}
   #else
+
+/*--- ENABLE_APP_MIC_MASTER_SLAVE_SWAP --- start --- */
   //!@{ @name Parameters for microphone index 0 - Left analog MIC */
   #define appConfigMic0Bias()                     (BIAS_CONFIG_MIC_BIAS_0)
   #define appConfigMic0BiasVoltage()              (3) /* 1.9v */
-  #define appConfigMic0Pio()                      (0x13)
+  #define appConfigMic0Pio()                      (0x16)
   #define appConfigMic0Type()                     (mic_type_analog)
   #define appConfigMic0AudioInstance()            (AUDIO_INSTANCE_0)
-  #define appConfigMic0AudioChannel()             (AUDIO_CHANNEL_A)
+  #define appConfigMic0AudioChannel()             (AUDIO_CHANNEL_B)
   //!@}
   #endif /* INCLUDE_LIS25BA_ACCELEROMETER */
 #endif /* defined(HAVE_RDP_HW_18689) */
@@ -43,11 +45,12 @@
 //!@{ @name Parameters for microphone index 1 - Right analog MIC */
 #define appConfigMic1Bias()                     (BIAS_CONFIG_MIC_BIAS_0)
 #define appConfigMic1BiasVoltage()              (3) /* 1.9v */
-#define appConfigMic1Pio()                      (0x16)
+#define appConfigMic1Pio()                      (0x13)
 #define appConfigMic1Type()                     (mic_type_analog)
 #define appConfigMic1AudioInstance()            (AUDIO_INSTANCE_0)
-#define appConfigMic1AudioChannel()             (AUDIO_CHANNEL_B)
+#define appConfigMic1AudioChannel()             (AUDIO_CHANNEL_A)
 //!@}
+/*--- ENABLE_APP_MIC_MASTER_SLAVE_SWAP ---  end  --- */
 
 #if defined(CORVUS_PG806)
 

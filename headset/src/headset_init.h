@@ -39,6 +39,13 @@ void HeadsetInit_StartInitialisation(void);
  */
 void HeadsetInit_CompleteInitialisation(void);
 
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+extern void appDisableExternalBatteryCharing(void);
+extern void appEnableExternalBatteryCharing(void);
+extern bool isAppBatteryComplete(void);
+extern bool isAppBatteryCharing(void);
+extern bool isAppBatteryCharingComplete(void);
+#endif
 
 #endif /* HEADSET_INIT_H */
 

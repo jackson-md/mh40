@@ -12,6 +12,10 @@
 #include "kymera_internal_msg_ids.h"
 #include "pio_common.h"
 
+#ifdef ENABLE_APP_FIX_PO_NOISE
+#include "headset_test.h"
+#endif
+
 static uint8 audio_ss_client_count = 0;
 
 void appKymeraExternalAmpSetup(void)
@@ -76,6 +80,10 @@ void appKymeraExternalAmpControl(bool enable)
         }
 
         audio_ss_client_count++;
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+        appDisableSpeakerMuteTimer();
+#endif
     }
     else
     {
@@ -92,6 +100,10 @@ void appKymeraExternalAmpControl(bool enable)
             DEBUG_LOG("appKymeraExternalAmpControl, sending later KYMERA_INTERNAL_AUDIO_SS_DISABLE, count is %d", audio_ss_client_count);
             MessageSendLater(&theKymera->task, KYMERA_INTERNAL_AUDIO_SS_DISABLE, NULL, appKymeraDacDisconnectionDelayMs());
             audio_ss_client_count = 0;
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+            appEnableSpeakerMuteTimer();
+#endif
         }
     }
 }

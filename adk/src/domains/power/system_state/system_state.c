@@ -16,6 +16,10 @@
 
 #include <string.h>
 
+#ifdef ENABLE_APP_FIX_PO_NOISE
+#include "headset_test.h"
+#endif
+
 LOGGING_PRESERVE_MESSAGE_TYPE(system_state_messages_t)
 
 typedef struct
@@ -309,6 +313,10 @@ bool SystemState_Shutdown(void)
 bool SystemState_EmergencyShutdown(void)
 {
     DEBUG_LOG_STATE("SystemState_EmergencyShutdown");
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+    appSpeakerAmpMute();
+#endif
 
     systemState_SetState(system_state_shutting_down_promptly);
 

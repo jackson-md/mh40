@@ -17,6 +17,9 @@
 #include <volume_utils.h>
 #include <logging.h>
 
+#ifdef ENABLE_APP_PC_VOLUME_SYNC
+#include "device_db_serialiser.h"
+#endif
 
 PRESERVE_TYPE_FOR_DEBUGGING(earbud_device_property_t)
 
@@ -150,6 +153,9 @@ bool DeviceProperties_SetAudioVolume(device_t device, volume_t volume)
         audio_volume.value = VolumeUtils_ConvertToVolumeConfig(volume, audio_volume.config);
         was_set = Device_SetPropertyU8(device, device_property_audio_volume, audio_volume.value);
 
+#ifdef ENABLE_APP_PC_VOLUME_SYNC
+        DeviceDbSerialiser_SerialiseDevice(device);
+#endif
         DEBUG_LOG_VERBOSE("DeviceProperties_SetAudioVolume device 0x%x vol %d/%d device vol:%d was_set %d",
                           device, 
                           volume.value, volume.config.range.max, 

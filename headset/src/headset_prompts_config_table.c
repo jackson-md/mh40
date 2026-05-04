@@ -16,18 +16,22 @@
 #include <power_manager.h>
 #include <voice_ui.h>
 
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+#include "telephony_messages.h"
+#endif
+
 #ifdef INCLUDE_PROMPTS
 const ui_event_indicator_table_t headset_ui_prompts_table[] =
 {
 #ifndef EXCLUDE_POWER_PROMPTS
-    {.sys_event=POWER_ON,                {.prompt.filename = PROMPT_FILENAME("power_on"),
+    {.sys_event=POWER_ON,                {.prompt.filename = PROMPT_FILENAME("MD_Power_On_48K"),
                                           .prompt.rate = 48000,
                                           .prompt.format = PROMPT_FORMAT,
                                           .prompt.interruptible = FALSE,
                                           .prompt.queueable = TRUE,
                                           .prompt.requires_repeat_delay = TRUE },
                                           .await_indication_completion = TRUE },
-    {.sys_event=POWER_OFF,              { .prompt.filename = PROMPT_FILENAME("power_off"),
+    {.sys_event=POWER_OFF,              { .prompt.filename = PROMPT_FILENAME("MD_Power_Off_48K"),
                                           .prompt.rate = 48000,
                                           .prompt.format = PROMPT_FORMAT,
                                           .prompt.interruptible = FALSE,
@@ -35,38 +39,60 @@ const ui_event_indicator_table_t headset_ui_prompts_table[] =
                                           .prompt.requires_repeat_delay = TRUE },
                                           .await_indication_completion = TRUE },
 #endif
-    {.sys_event=PAIRING_ACTIVE,         { .prompt.filename = PROMPT_FILENAME("pairing"),
+    {.sys_event=PAIRING_ACTIVE,         { .prompt.filename = PROMPT_FILENAME("MD_Pairing_48K"),
+                                          .prompt.rate = 48000,
+                                          .prompt.format = PROMPT_FORMAT,
+                                          .prompt.interruptible = TRUE,
+                                          .prompt.queueable = TRUE,
+                                          .prompt.requires_repeat_delay = TRUE }},
+#if 0
+    {.sys_event=PAIRING_COMPLETE,       { .prompt.filename = "MD_052318_Connect_48K.sbc",
                                           .prompt.rate = 48000,
                                           .prompt.format = PROMPT_FORMAT,
                                           .prompt.interruptible = FALSE,
                                           .prompt.queueable = TRUE,
                                           .prompt.requires_repeat_delay = TRUE }},
-    {.sys_event=PAIRING_COMPLETE,       { .prompt.filename = PROMPT_FILENAME("pairing_successful"),
+
+    {.sys_event=PAIRING_FAILED,         { .prompt.filename = "MD_052318_Disconnect_48K.sbc",
                                           .prompt.rate = 48000,
                                           .prompt.format = PROMPT_FORMAT,
                                           .prompt.interruptible = FALSE,
                                           .prompt.queueable = TRUE,
                                           .prompt.requires_repeat_delay = TRUE }},
-    {.sys_event=PAIRING_FAILED,         { .prompt.filename = PROMPT_FILENAME("pairing_failed"),
-                                          .prompt.rate = 48000,
-                                          .prompt.format = PROMPT_FORMAT,
-                                          .prompt.interruptible = FALSE,
-                                          .prompt.queueable = TRUE,
-                                          .prompt.requires_repeat_delay = TRUE }},
+#endif
+
+#if 1
+    {.sys_event=TELEPHONY_CONNECTED,                            { .prompt.filename = PROMPT_FILENAME("MD_Connect_48K"),
+                                                                  .prompt.rate = 48000,
+                                                                  .prompt.format = PROMPT_FORMAT,
+                                                                  .prompt.interruptible = FALSE,
+                                                                  .prompt.queueable = TRUE,
+                                                                  .prompt.requires_repeat_delay = FALSE }},
+    {.sys_event=TELEPHONY_DISCONNECTED,                         { .prompt.filename = PROMPT_FILENAME("MD_Disconnect_48K"),
+                                                                  .prompt.rate = 48000,
+                                                                  .prompt.format = PROMPT_FORMAT,
+                                                                  .prompt.interruptible = FALSE,
+                                                                  .prompt.queueable = TRUE,
+                                                                  .prompt.requires_repeat_delay = FALSE }},
+
+#else
 #ifndef EXCLUDE_CONN_PROMPTS
-    {.sys_event=HANDSET_SERVICE_FIRST_PROFILE_CONNECTED_IND,    { .prompt.filename = PROMPT_FILENAME("connected"),
+    {.sys_event=HANDSET_SERVICE_FIRST_PROFILE_CONNECTED_IND,    { .prompt.filename = PROMPT_FILENAME("MD_Connect_48K"),
                                                                   .prompt.rate = 48000,
                                                                   .prompt.format = PROMPT_FORMAT,
                                                                   .prompt.interruptible = FALSE,
                                                                   .prompt.queueable = TRUE,
                                                                   .prompt.requires_repeat_delay = FALSE }},
-    {.sys_event=HANDSET_SERVICE_DISCONNECTED_IND,               { .prompt.filename = PROMPT_FILENAME("disconnected"),
+
+    {.sys_event=HANDSET_SERVICE_DISCONNECTED_IND,               { .prompt.filename = PROMPT_FILENAME("MD_Disconnect_48K"),
                                                                   .prompt.rate = 48000,
                                                                   .prompt.format = PROMPT_FORMAT,
                                                                   .prompt.interruptible = FALSE,
                                                                   .prompt.queueable = TRUE,
                                                                   .prompt.requires_repeat_delay = FALSE }},
 #endif
+#endif
+
 #ifdef INCLUDE_GAA
     {.sys_event=VOICE_UI_MIC_OPEN,      { .prompt.filename = PROMPT_FILENAME("mic_open"),
                                           .prompt.rate = 16000,
@@ -87,7 +113,53 @@ const ui_event_indicator_table_t headset_ui_prompts_table[] =
                                           .prompt.queueable = TRUE,
                                           .prompt.requires_repeat_delay = TRUE }}
 #endif /* INCLUDE_GAA */
+
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+    {.sys_event=INN_BATTERY_LOW_WARNING_PROMPT,     { .prompt.filename = PROMPT_FILENAME("MD_LowBat_48K"),
+                                                      .prompt.rate = 48000,
+                                                      .prompt.format = PROMPT_FORMAT,
+                                                      .prompt.interruptible = FALSE,
+                                                      .prompt.queueable = TRUE,
+                                                      .prompt.requires_repeat_delay = TRUE }},
+#endif
+
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+    {.sys_event=INN_TELEPHONY_INCOMING_RINGTONE,    { .prompt.filename = PROMPT_FILENAME("MD_Ring_48K"),
+                                                      .prompt.rate = 48000,
+                                                      .prompt.format = PROMPT_FORMAT,
+                                                      .prompt.interruptible = FALSE,
+                                                      .prompt.queueable = TRUE,
+                                                      .prompt.requires_repeat_delay=FALSE }},
+#endif
+
+#ifdef ENABLE_APP_FACTORY_RESET
+    {.sys_event=INN_APP_FACTORY_RESET,              {.prompt.filename = PROMPT_FILENAME("MD_FactoryReset_48K"),
+                                                      .prompt.rate = 48000,
+                                                      .prompt.format = PROMPT_FORMAT,
+                                                      .prompt.interruptible = FALSE,
+                                                      .prompt.queueable = TRUE,
+                                                      .prompt.requires_repeat_delay = TRUE },
+                                                      .await_indication_completion = TRUE },
+#endif
+
+#ifdef ENABLE_APP_MIC_MUTE
+    {.sys_event=INN_APP_MIC_MUTE_PROMPT,            { .prompt.filename = PROMPT_FILENAME("MD_MicMute_48K"),
+                                                      .prompt.rate = 48000,
+                                                      .prompt.format = PROMPT_FORMAT,
+                                                      .prompt.interruptible = FALSE,
+                                                      .prompt.queueable = TRUE,
+                                                      .prompt.requires_repeat_delay = FALSE }},
+
+    {.sys_event=INN_APP_MIC_UNMUTE_PROMPT,          { .prompt.filename = PROMPT_FILENAME("MD_MicUnmute_48K"),
+                                                      .prompt.rate = 48000,
+                                                      .prompt.format = PROMPT_FORMAT,
+                                                      .prompt.interruptible = FALSE,
+                                                      .prompt.queueable = TRUE,
+                                                      .prompt.requires_repeat_delay = FALSE }},
+#endif
 };
+
 #endif
 uint8 HeadsetPromptsConfigTable_GetSize(void)
 {

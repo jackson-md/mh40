@@ -135,4 +135,9 @@ void StereoTopology_DisconnectLruHandset(void);
 */
 void StereoTopology_DisconnectAllHandsets(void);
 
+#ifdef ENABLE_APP_OTA_LED
+extern void TwsTopology_SetOtaEnable(bool val);
+extern bool TwsTopology_IsOtaEnable(void);
+#endif
+
 #endif /* STEREO_TOPOLOGY_H_ */

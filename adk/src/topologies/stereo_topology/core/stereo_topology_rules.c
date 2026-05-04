@@ -20,6 +20,11 @@
 
 #include <logging.h>
 
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+#include "headset_test.h"
+#include "dfu.h"
+#endif
+
 #pragma unitsuppress Unused
 
 /*! \{
@@ -165,6 +170,23 @@ static rule_action_t ruleStereoTopConnectHandset(rule_connect_reason_t reason)
         STEREOTOP_RULE_LOG("ruleStereoTopConnectHandset, ignore as handset connection is disabled");
         return rule_action_ignore;
     }
+
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+    if(ConManagerIsHandsetPairingMode())
+    {
+        STEREOTOP_RULE_LOG("ruleStereoTopConnectHandset, ignore when the headset is pairing");
+        return rule_action_ignore;
+    }
+
+    if (Dfu_GetRebootReason() != REBOOT_REASON_DFU_RESET)
+    {
+        if(appGetAllowPoweronReconnectFlag() == TRUE)
+        {
+            STEREOTOP_RULE_LOG("ruleStereoTopConnectHandset, Ignore reconnect if the power key hold when the headset power on ");
+            return rule_action_ignore;
+        }
+    }
+#endif
 
     if (reason == rule_connect_linkloss)
     {

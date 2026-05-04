@@ -125,5 +125,23 @@ void HfpBievIndStatusRequest(hfp_link_priority priority, uint16 assigned_id, uin
            /* Send the AT cmd over the air */
            hfpSendAtCmd(link, char_idx, biev_req, hfpBievStatusCmdPending);
         }
+/*--- OYH 20220726 --- ENABLE_APP_NOTIFY_BATTERY_PRECENT --- start ---*/
+        else
+        {
+            uint8 percent = value/10;
+            char at_cmd[25];
+            if(percent >= 0x01)
+            {
+                percent = percent-0x01;
+            }
+            else
+            {
+                percent = 0x00;
+            }
+            snprintf(at_cmd, sizeof(at_cmd), "AT+IPHONEACCEV=1,1,%d\r",percent);
+            HfpAtCmdRequest(priority, (char*)"AT+XAPL=0099-8300-0100,3\r");
+            HfpAtCmdRequest(priority, at_cmd);
+        }
+/*--- OYH 20220726 --- ENABLE_APP_NOTIFY_BATTERY_PRECENT ---- end ----*/
     }
 }

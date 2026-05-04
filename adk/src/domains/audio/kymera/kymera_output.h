@@ -70,5 +70,9 @@ uint32 KymeraOutput_GetAuxSampleRate(void);
 */
 void KymeraOutput_MuteMainChannel(bool mute_enable);
 
+#ifdef ENABLE_APP_FIX_PO_NOISE
+extern void appKymeraOutput_SetMainVolumeMute(bool val);
+#endif
+
 
 #endif /* KYMERA_OUTPUT_H */

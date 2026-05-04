@@ -344,7 +344,10 @@ void Soc_Init(void)
     if(PsRetrieve(BATTERY_STATE_OF_CHARGE_KEY, &soc, 1) != 0)
     {
         DEBUG_LOG("SoC_Init: PSRetrieve returned last value of Battery Charge: %u%%", soc);
-        soc_data->state_of_charge = soc; 
+        soc_data->state_of_charge = soc;
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+        soc_data->save_battery_percent = soc;
+#endif
     }
     else
     {
@@ -354,6 +357,9 @@ void Soc_Init(void)
 		   is required in order to get the correct values of SOC when the
 		   battery indication is handled. */
         soc_data->state_of_charge = 100;
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+        soc_data->save_battery_percent = 100;
+#endif
     }
     
     soc_data->charger_connected = Charger_IsConnected();
@@ -395,6 +401,19 @@ uint8 Soc_GetBatterySoc(void)
     soc_data_t *soc_data = GetBatteryChargeData();
     return (uint8)soc_data->state_of_charge;
 }
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+uint16 Soc_GetSaveBatteryVoltage(void)
+{
+    soc_data_t *soc_data = GetBatteryChargeData();
+    uint8 percent = soc_data->save_battery_percent;
+    if (percent < 100)
+    {
+        percent += 1;
+    }
+    return soc_ctx.soc_config_table[percent].voltage;
+}
+#endif
 
 void Soc_SetConfigurationTable(const soc_lookup_t* config_table,
                               unsigned config_size)

@@ -19,6 +19,10 @@
 #include <ui_indicator_prompts.h>
 #include <ui_indicator_tones.h>
 
+#ifdef ENABLE_APP_HID_COMMAND
+#include "headset_test.h"
+#endif
+
 bool HeadsetUi_Init(Task init_task)
 {
     UNUSED(init_task);
@@ -45,6 +49,12 @@ bool HeadsetUi_Init(Task init_task)
                 HeadsetLedsConfigTable_GetSize(),
                 headset_ui_leds_context_indications_table,
                 HeadsetLedsConfigTable_ContextsTableGetSize());
+
+#ifdef ENABLE_APP_HID_COMMAND
+#ifdef INCLUDE_USB_DEVICE
+    appTestUsbHidInit();
+#endif
+#endif
 
     return TRUE;
 }

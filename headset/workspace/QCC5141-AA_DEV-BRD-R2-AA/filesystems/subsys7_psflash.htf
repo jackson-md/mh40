@@ -35,10 +35,10 @@ file=app1
 #       See system_reboot.c
 
 # USR5 - This key is used to set Fast Pair Model ID for an audio sink device. Stored in Little Endian format.
-USR5 = [ AB AD 20 00 ]
+USR5 = [07 BE 35 00 ]
 
 # USR6 - This key is used to set Scrambled ASPK for an audio sink device. Stored in Little Endian format.
-USR6 = [ F3 16 35 79 EC D4 D1 BE E7 08 22 52 93 D2 5F 52 89 BF D2 0B EC 6F 12 0F 21 85 DF BB 19 14 F1 55 ]
+USR6 = [ 07 1E 0F 60 3A 97 97 62 2D 74 08 7A 7D 70 77 52 7E 76 C1 53 D6 2D CC 3D A9 EC B1 86 E5 C0 6C 12 ]
 
 #USR7 - This key is reserved. It is used to save the status for device upgrade
 #       See upgrade.h

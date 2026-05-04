@@ -49,6 +49,12 @@
 #include "qualcomm_connection_manager.h"
 #include "sass.h"
 
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+#ifdef ENABLE_APP_MD_GAIA_NOTIFY_DEVICE_STATUS
+#include "voice_ui_gaia_plugin.h"
+#endif
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_TYPE(handset_service_msg_t)
 LOGGING_PRESERVE_MESSAGE_TYPE(handset_service_internal_msg_t)
@@ -770,6 +776,14 @@ static void handsetService_HandleProfileManagerConnectedInd(const CONNECTED_PROF
 
         /* Forward the connect ind to the state machine */
         HandsetServiceSm_HandleProfileManagerConnectedInd(sm, ind);
+
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+#ifdef ENABLE_APP_MD_GAIA_NOTIFY_DEVICE_STATUS
+        appGaiaConnectDeviceHandle(addr);
+        appNotifyDeviceStatus(addr, gaia_notify_device_status_connected, ind->profile);
+#endif
+#endif
+
     }
 }
 

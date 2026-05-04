@@ -144,4 +144,8 @@ void appBatteryTestResumeAdcMeasurements(void);
 
 #endif /* !HAVE_NO_BATTERY */
 
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+extern void appBatteryLevelCheck(void);
+#endif
+
 #endif /* BATTERY_MONITOR_H_ */

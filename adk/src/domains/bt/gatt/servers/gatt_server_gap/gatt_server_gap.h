@@ -14,7 +14,6 @@ Also responsible for LE advertising of the local name.
 #ifndef GATT_SERVER_GAP_H_
 #define GATT_SERVER_GAP_H_
 
-
 /*! \brief Initialise the GAP Server.
 
     \param init_task    Task to send init completion message to

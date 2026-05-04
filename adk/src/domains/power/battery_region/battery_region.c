@@ -24,6 +24,11 @@ DEBUG_LOG_DEFINE_LEVEL_VAR
 #include "panic.h"
 #include "unexpected_message.h"
 
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+#include "headset_sm.h"
+#define APP_CHARGING_REGION_ID 0x03
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_ENUM(battery_region_messages)
 
@@ -241,6 +246,16 @@ static void batteryRegion_UpdateRegion(battery_region_data_t *battery_region)
             }
             
             batteryRegion_ServiceClients(battery_region);
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+            if (Charger_IsConnected() == TRUE)
+            {
+                if (i < APP_CHARGING_REGION_ID)
+                {
+                    appCharingComplteteHandle();
+                }
+            }
+#endif
             return;
         }
     }

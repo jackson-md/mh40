@@ -27,6 +27,7 @@
 #include <focus_select.h>
 #include <telephony_service.h>
 #include <handset_service.h>
+#include "pairing.h"
 
 const focus_select_audio_tie_break_t audio_source_focus_priority[] =
 {
@@ -44,6 +45,7 @@ const focus_select_voice_tie_break_t voice_source_focus_priority[] =
 /*! \brief ui config table*/
 const ui_config_table_content_t headset_ui_config_table[] =
 {
+#if 0
     {APP_ANC_ENABLE,                   ui_provider_audio_curation,  context_anc_disabled,                 ui_input_anc_on                       },
 
     {APP_ANC_DISABLE,                  ui_provider_audio_curation,  context_anc_enabled,                  ui_input_anc_off                      },
@@ -123,6 +125,111 @@ const ui_config_table_content_t headset_ui_config_table[] =
     {APP_BUTTON_PLAY_PAUSE_TOGGLE,    ui_provider_media_player,     context_media_player_streaming,       ui_input_toggle_play_pause            },
     {APP_BUTTON_PLAY_PAUSE_TOGGLE,    ui_provider_media_player,     context_media_player_idle,            ui_input_toggle_play_pause            },
 #endif /* HAVE_7_BUTTONS || HAVE_9_BUTTONS */
+#endif
+
+    {APP_POWER_BUTTON_SHORT_PRESS_RELEASE,       ui_provider_app_sm,          context_app_sm_inactive,                 ui_input_sm_power_on                  },
+    {APP_POWER_BUTTON_SHORT_PRESS_RELEASE,       ui_provider_app_sm,          context_app_sm_active,                   ui_input_sm_power_off                 },
+#ifdef ENABLE_APP_BATTERY_CHECK_LED
+    //{APP_POWER_BUTTON_SKP,              ui_provider_app_sm,          context_app_sm_active,                   ui_input_battery_precent_check        },
+#endif
+
+    {APP_POWER_BUTTON_VLONG_PRESS,      ui_provider_app_sm,          context_app_sm_powered_off,              ui_input_sm_pair_handset              },
+
+#ifdef ENABLE_APP_PAIRING_ENTER_OR_CANCEL
+    {APP_POWER_BUTTON_VLONG_PRESS,      ui_provider_app_sm,          context_app_sm_active,                   ui_input_app_pairing_enter_or_cancel  },
+#endif
+
+    /*connectable*/
+    {APP_MFB_BUTTON_SKP,                ui_provider_handset,          context_handset_not_connected,          ui_input_connect_handset           },
+    {APP_MFB_BUTTON_LKP,                ui_provider_handset,          context_handset_not_connected,          ui_input_connect_handset           },
+    {APP_MFB_BUTTON_DKP,                ui_provider_handset,          context_handset_not_connected,          ui_input_connect_handset           },
+    {APP_MFB_BUTTON_TKP,                ui_provider_handset,          context_handset_not_connected,          ui_input_connect_handset           },
+
+    /*connected*/
+    {APP_MFB_BUTTON_SKP,                ui_provider_media_player,    context_media_player_idle,              ui_input_toggle_play_pause         },
+    {APP_MFB_BUTTON_LKP,                ui_provider_handset,          context_handset_connected,             ui_input_voice_dial                },
+    //{APP_MFB_BUTTON_DKP,                ui_provider_media_player,    context_media_player_idle,              ui_input_voice_call_last_dialed    },
+
+    /*Incoming call*/
+    //{APP_VOL_UP_SINGLE_PRESS,           ui_provider_telephony,       context_voice_ringing_incoming,         ui_input_voice_call_accept         },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_ringing_incoming,         ui_input_voice_call_accept         },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_in_call_with_incoming,    ui_input_voice_call_accept         },
+
+    //{APP_VOL_DOWN_SINGLE_PRESS,         ui_provider_telephony,       context_voice_ringing_incoming,         ui_input_voice_call_reject         },
+    {APP_MFB_BUTTON_DOUBLE_CLICK,       ui_provider_telephony,       context_voice_ringing_incoming,         ui_input_voice_call_reject         },
+    {APP_MFB_BUTTON_DOUBLE_CLICK,       ui_provider_telephony,       context_voice_in_call_with_incoming,    ui_input_voice_call_reject         },
+
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_ringing_incoming,         ui_input_voice_transfer_to_ag      },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_call_with_incoming,    ui_input_voice_transfer_to_ag      },
+
+    /*Outgoing Call */
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_ringing_outgoing,         ui_input_voice_call_hang_up        },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_in_call_with_outgoing,    ui_input_voice_call_hang_up        },
+
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_ringing_outgoing,         ui_input_voice_transfer_to_ag      },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_call_with_outgoing,    ui_input_voice_transfer_to_ag      },
+
+    /*Ongoing call(audio in phone)*/
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_in_call,                  ui_input_voice_call_short_press_handle },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_call_held,                ui_input_voice_call_short_press_handle },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_in_call_with_held,        ui_input_voice_call_short_press_handle },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_in_multiparty_call,       ui_input_voice_call_short_press_handle },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_ringing_outgoing,         ui_input_voice_call_short_press_handle },
+    {APP_MFB_BUTTON_SINGLE_PRESS,       ui_provider_telephony,       context_voice_in_call_with_outgoing,    ui_input_voice_call_short_press_handle },
+
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_call,                  ui_input_voice_call_long_press_handle  },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_call_held,                ui_input_voice_call_long_press_handle  },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_call_with_held,        ui_input_voice_call_long_press_handle  },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_multiparty_call,       ui_input_voice_call_long_press_handle  },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_call_with_incoming,    ui_input_voice_call_long_press_handle  },
+    {APP_MFB_BUTTON_LONG_PRESS,         ui_provider_telephony,       context_voice_in_call_with_outgoing,    ui_input_voice_call_long_press_handle  },
+
+    /*Music Volume control*/
+    //{APP_VOL_UP_SKP,                    ui_provider_handset,          context_handset_connected,			 ui_input_volume_up                 },
+    //{APP_VOL_DOWN_SKP,                  ui_provider_handset,          context_handset_connected, 			 ui_input_volume_down               },
+
+    /*Music Volume control*/
+    {APP_VOL_UP_SKP,                    ui_provider_handset,          context_handset_connected,              ui_input_volume_up                 },
+    {APP_VOL_DOWN_SKP,                  ui_provider_handset,          context_handset_connected,              ui_input_volume_down               },
+    {APP_VOL_UP_HELD,                   ui_provider_handset,          context_handset_connected,              ui_input_volume_up_start           },
+    {APP_VOL_UP_RELEASE,                ui_provider_handset,          context_handset_connected,              ui_input_volume_stop               },
+    {APP_VOL_DOWN_HELD,                 ui_provider_handset,          context_handset_connected,              ui_input_volume_down_start         },
+    {APP_VOL_DOWN_RELEASE,              ui_provider_handset,          context_handset_connected,              ui_input_volume_stop               },
+
+#if 0
+    {APP_VOL_UP_HELD,                   ui_provider_device,          context_handset_connected,              ui_input_volume_up_start           },
+    {APP_VOL_UP_RELEASE,                ui_provider_device,          context_handset_connected,              ui_input_volume_stop               },
+    {APP_VOL_DOWN_HELD,                 ui_provider_device,          context_handset_connected,              ui_input_volume_down_start         },
+    {APP_VOL_DOWN_RELEASE,              ui_provider_device,          context_handset_connected,              ui_input_volume_stop               },
+#endif
+
+    /*Music Streaming*/
+    {APP_MFB_BUTTON_SKP,                ui_provider_media_player,    context_media_player_streaming,         ui_input_toggle_play_pause         },
+#ifdef ENABLE_APP_EQ_SWITCH_DEBUG
+    //{APP_MFB_BUTTON_DOUBLE_CLICK,       ui_provider_media_player,    context_media_player_streaming,         ui_input_app_eq_switch             },
+#else
+    {APP_MFB_BUTTON_DOUBLE_CLICK,       ui_provider_media_player,    context_media_player_streaming,         ui_input_av_forward                },
+    {APP_MFB_BUTTON_TRIPLE_CLICK,       ui_provider_media_player,    context_media_player_streaming,         ui_input_av_backward               },
+
+#endif
+
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+    {APP_MFB_BUTTON_FIFTH_CLICK,        ui_provider_handset_pairing, context_handset_pairing_active,         ui_input_dut_mode                  },
+#endif
+
+#ifdef ENABLE_APP_MIC_SWITCH
+    //{APP_MFB_BUTTON_TRIPLE_CLICK,       ui_provider_telephony,       context_voice_in_call,                  ui_input_app_mic_switch            },
+#endif
+
+    {APP_MFB_BUTTON_VVLONG_PRESS,       ui_provider_handset_pairing, context_handset_pairing_active,         ui_input_factory_reset_request     },
+#ifdef ENABLE_APP_MIC_MUTE
+    {APP_MFB_BUTTON_DOUBLE_CLICK,       ui_provider_telephony,       context_voice_in_call,                  ui_input_app_mfb_button_double_click },
+    {APP_MFB_BUTTON_DOUBLE_CLICK,       ui_provider_media_player,    context_media_player_idle,              ui_input_app_mfb_button_double_click },
+#endif
+
+#ifdef ENABLE_APP_PANIC_TO_OFFLINE_LOG
+    {APP_MFB_BUTTON_TRIPLE_CLICK,      ui_provider_media_player,    context_media_player_idle,              ui_input_app_power_button_triple_click },
+#endif
 };
 
 
@@ -142,7 +249,7 @@ bool HeadsetUi_IsLogicalInputScreenedInLimboState(unsigned logical_input)
 {
     switch (logical_input)
     {
-    case LI_MFB_BUTTON_RELEASE_6SEC:
+    case APP_POWER_BUTTON_SHORT_PRESS_RELEASE:
         /* Power On button press is not screened. */
         return FALSE;
     default:

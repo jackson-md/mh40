@@ -15,7 +15,18 @@
     </pio>
 
     <pio>
-        <pinFriendlyName>MFB</pinFriendlyName>
+        <pinFriendlyName>VOL_UP</pinFriendlyName>
+        <pad>2</pad>
+    </pio>
+
+    <pio>
+        <pinFriendlyName>VOL_DOWN</pinFriendlyName>
         <pad>3</pad>
     </pio>
+
+    <pio>
+        <pinFriendlyName>MFB</pinFriendlyName>
+        <pad>4</pad>
+    </pio>
+
 </pio_map>

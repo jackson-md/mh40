@@ -232,3 +232,44 @@ Task PowerGetTask(void)
     return &app_power.task;
 }
 
+#ifdef ENABLE_APP_ENTER_DUT_MODE
+void appEnterDutMode(void)
+{
+    DEBUG_LOG("appEnterDutMode");
+
+    TaskList_MessageSendId(appPowerGetClients(), INN_ENTER_DUT_LED);
+}
+#endif
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+void appBatteryChargeComplete(void)
+{
+    DEBUG_LOG("appBatteryChargeComplete");
+
+    TaskList_MessageSendId(appPowerGetClients(), INN_APP_BATTERY_CHARGE_COMPLETE);
+}
+#endif
+
+#ifdef ENABLE_APP_BATTERY_LOW_WARNING
+void appPowerBatteryLowLed(void)
+{
+    DEBUG_LOG("appPowerLowBatteryLed");
+    TaskList_MessageSendId(appPowerGetClients(), INN_BATTERY_LOW_WARNING_LED);
+}
+
+void appPowerBatteryLowPrompt(void)
+{
+    DEBUG_LOG("appPowerBatteryLowPrompt");
+    TaskList_MessageSendId(appPowerGetClients(), INN_BATTERY_LOW_WARNING_PROMPT);
+}
+#endif
+
+#ifdef ENABLE_APP_FACTORY_RESET
+void appFactoryReset(void)
+{
+    DEBUG_LOG("appFactoryReset");
+
+    TaskList_MessageSendId(appPowerGetClients(), INN_APP_FACTORY_RESET);
+}
+#endif
+

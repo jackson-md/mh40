@@ -8,8 +8,45 @@
 
 #include "usb_hid_datalink_descriptors.h"
 
+#ifdef ENABLE_APP_HID_COMMAND
+#define HID_REPORTID_INN_DATA_TRANSFER              0x07
+#define HID_REPORTID_INN_RESPONSE                   0x08
+#define HID_REPORTID_INN_NOTIFICAION                0x09
+#define HID_REPORTID_INN_LEN                        0x13
+#endif
+
 static const uint8 report_descriptor_hid_datalink[] =
 {
+#ifdef ENABLE_APP_HID_COMMAND
+    0x06, 0xa0, 0xff, 	/* USAGE_PAGE (Vendor-defined 0xFFA0) */
+    0x09, 0x01, 		/* USAGE (Vendor-defined 0x0001) */
+    0xa1, 0x01, 		/* COLLECTION (Application) */
+    0x85, HID_REPORTID_INN_DATA_TRANSFER, /* REPORT ID (7) */
+    0x15, 0x00, 		/* LOGICAL_MINIMUM (0) */
+    0x26, 0xff, 0x00, 	/* LOGICAL_MAXIMUM (255) */
+    0x09, 0x00,         /* Usage (unassigned) */
+    0x75, 0x08, 		/* REPORT_SIZE (8) */
+    0x95, HID_REPORTID_INN_LEN, 		/* REPORT_COUNT (19) */
+    0x91,0x02,          /*OUTPUTReport*/
+
+    0x85,HID_REPORTID_INN_RESPONSE,     /*ReportID(8)*/
+    0x15, 0x00, 		/* LOGICAL_MINIMUM (0) */
+    0x26, 0xff, 0x00, 	/* LOGICAL_MAXIMUM (255) */
+    0x09, 0x00,         /* Usage (unassigned) */
+    0x75, 0x08, 		/* REPORT_SIZE (8) */
+    0x95, HID_REPORTID_INN_LEN, 		/* REPORT_COUNT (19) */
+    0x81, 0x02, 		/* INPUT (Const,Array,Abs)*/
+
+    0x85,HID_REPORTID_INN_NOTIFICAION,     /*ReportID(9)*/
+    0x15, 0x00, 		/* LOGICAL_MINIMUM (0) */
+    0x26, 0xff, 0x00, 	/* LOGICAL_MAXIMUM (255) */
+    0x09, 0x00,         /* Usage (unassigned) */
+    0x75, 0x08, 		/* REPORT_SIZE (8) */
+    0x95, HID_REPORTID_INN_LEN, 		/* REPORT_COUNT (19) */
+    0x81, 0x02, 		/* INPUT (Const,Array,Abs)*/
+
+    0xc0, 		 	/* END_COLLECTION */
+#else
     0x06, 0x00, 0xFF,                   /* Vendor Defined Usage Page 1 */
 
     0x09, 0x01,                         /* Vendor Usage 1 */
@@ -84,6 +121,7 @@ static const uint8 report_descriptor_hid_datalink[] =
 
 
     0xC0                                /* End of Collection */
+#endif
 };
 
 /* See the USB HID 1.11 spec section 6.2.1 for description */

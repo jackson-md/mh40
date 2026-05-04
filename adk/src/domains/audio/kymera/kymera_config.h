@@ -18,7 +18,8 @@
 #define ST_GAIN_RAMP_STEP_TIME_MS  (25U)
 
 /*! \brief Fixed tone volume in dB */
-#define KYMERA_CONFIG_TONE_VOLUME               (-20)
+//#define KYMERA_CONFIG_TONE_VOLUME               (-20)
+#define KYMERA_CONFIG_TONE_VOLUME               (50)
 
 /*! \brief Fixed prompt volume in dB */
 #if (defined QCC3020_FF_ENTRY_LEVEL_AA) || (defined HAVE_RDP_UI)
@@ -303,11 +304,14 @@
 
 #else
 
+/* --- ENABLE_APP_LDO_SPEAKER_CONTROL speaker mute Amp start --- */
 #define appConfigExternalAmpControlRequired()    (FALSE)
-#define appConfigExternalAmpControlPio()         (0)
-#define appConfigExternalAmpControlEnableMask()  (0)
-#define appConfigExternalAmpControlDisableMask() (0)
+#define appConfigExternalAmpControlPio()         (40)
+#define appConfigExternalAmpControlEnableMask()  (1 << (appConfigExternalAmpControlPio() % 32))
+#define appConfigExternalAmpControlDisableMask() (0 << 0)
+/* --- ENABLE_APP_LDO_SPEAKER_CONTROL speaker mute Amp  end  --- */
 
+/**/
 #endif /* defined(CE821_CF212) or defined(CF376_CF212) or defined(CE821_CE826) */
 //!@}
 
@@ -376,7 +380,11 @@
     at which to unmute. If this function isn't called for some reason, this
     configuration defines the timeout after which kymera will automatically
     unmute its output. */
-#define appConfigScoSyncUnmuteTimeoutMs() D_SEC(1)
+//#define appConfigScoSyncUnmuteTimeoutMs() D_SEC(1)
+
+/* --- ENABLE_APP_FIX_PO_NOISE speaker mute Amp start --- */
+#define appConfigScoSyncUnmuteTimeoutMs() 130
+/* --- ENABLE_APP_FIX_PO_NOISE speaker mute Amp  end  --- */
 
 /*! When the secondary joins an a primary with active A2DP, it starts with its
     audio muted. After synchronising, it unmutes. The firmware indicates

@@ -91,7 +91,22 @@
 #include "wired_audio_private.h"
 #endif
 
+#ifdef ENABLE_APP_MD_GAIA
+#include "tym_ps.h"
+#endif
 
+#ifdef ENABLE_APP_EQ_SWITCH
+#include "kymera_music_processing.h"
+#endif
+
+#ifdef ENABLE_APP_HID_COMMAND
+#include "production_test_hid.h"
+#endif
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+#include "kymera_output.h"
+#include "pio_monitor.h"
+#endif
 
 /* #define _TODO_ */
 
@@ -2294,6 +2309,22 @@ typedef struct
 
 static void appTestUsbHidHandler(uint8 report_id, const uint8 *data, uint16 size)
 {
+#ifdef ENABLE_APP_HID_COMMAND
+    uint8 i = 0x00;
+    if (report_id != HID_REPORTID_TEST_TRANSFER)
+    {
+        /* ignore this report */
+        return;
+    }
+
+    DEBUG_LOG_ALWAYS("USB_HID_TEST:%d bytes", size);
+
+    for(i = 0x00; i < size; i++)
+    {
+        DEBUG_LOG_ALWAYS("USB_HID_TEST: RX report[%d] = %02x",i, data[i]);
+    }
+    appTestUsbHidCmdHandler(data, size);
+#else
     usb_result_t result;
 
     if (report_id != HID_REPORTID_TEST_TRANSFER)
@@ -2352,6 +2383,7 @@ static void appTestUsbHidHandler(uint8 report_id, const uint8 *data, uint16 size
         DEBUG_LOG_ALWAYS("USB_HID_TEST: unexpected command 0x%x", hdr->cmd);
         Panic();
     }
+#endif
 }
 
 void appTestUsbHidInit(void)
@@ -2510,5 +2542,200 @@ void appTestUsbCdcDeInit(void)
     UsbCdc_UnregisterHandler(appTestUsbCdcHandler);
     UsbApplication_Close();
 }
+
+#ifdef ENABLE_APP_MD_GAIA
+#define PSKEY_USB_SERIAL_NUMBER_LEN     13
+bool appSetPsSerialNumber(uint16 size, uint8 *data)
+{
+    if (size != PSKEY_USB_SERIAL_NUMBER_LEN)
+    {
+        DEBUG_LOG_INFO("store serial number pskey length fail");
+        return FALSE;
+    }
+
+    uint8 ps_value[PSKEY_USB_SERIAL_NUMBER_LEN] = {0};
+    memcpy(ps_value, data, PSKEY_USB_SERIAL_NUMBER_LEN);
+
+    if (PsStore(PSKEY_INN_SN_STRING, ps_value, PSKEY_USB_SERIAL_NUMBER_LEN) != PSKEY_USB_SERIAL_NUMBER_LEN)
+    {
+        DEBUG_LOG_INFO("store serial number pskey data fail");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+bool appGetPsSerialNumber(uint16 *size, uint8 *data)
+{
+    uint8 ps_value[32] = {0};
+
+    if(PsRetrieve(PSKEY_INN_SN_STRING, ps_value, 32) == 0)
+    {
+        DEBUG_LOG_INFO("PsRetrieve serial number pskey fail");
+        return FALSE;
+    }
+
+    DEBUG_LOG_INFO("appGetPsSerialNumber: ");
+    for(int i=0; i<strlen((char*)ps_value); i++)
+    {
+        DEBUG_LOG_INFO("%c",ps_value[i]);
+    }
+
+    memcpy(data, ps_value, strlen((char*)ps_value));
+    *size = strlen((char*)ps_value);
+
+    return TRUE;
+}
+#endif
+
+#ifdef ENABLE_APP_EQ_SWITCH
+bool appSetEqMode(uint8 mode)
+{
+    return Kymera_SelectEqBankNow(mode);
+}
+#endif
+
+#ifdef ENABLE_APP_SIDETONE
+void appSetSideTone(bool val)
+{
+    Kymera_AecEnableSidetonePath(val);
+}
+#endif
+
+#ifdef ENABLE_APP_HID_COMMAND
+void appTestEnterPairingMode(void)
+{
+    appHeadsetSmHandlePowerOn();
+    MessageSendLater(&SmGetTaskData()->task, SM_INTERNAL_APP_DISABLE_USB_AUDIO, NULL, D_SEC(3));
+    MessageSendLater(&SmGetTaskData()->task, SM_INTERNAL_PAIR_HANDSET, NULL, D_SEC(5));
+}
+#endif
+
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+static bool g_PowerOnReconnectNotAllow = FALSE;
+
+void appSetAllowPoweronReconnectFlag(bool val)
+{
+    g_PowerOnReconnectNotAllow = val;
+}
+
+bool appGetAllowPoweronReconnectFlag(void)
+{
+    return g_PowerOnReconnectNotAllow;
+}
+
+void appPoweronReconnect(void)
+{
+    MessageCancelAll(headsetSmGetTask(), SM_INTERNAL_POWER_ON_300MS_TIMER);
+    MessageSendLater(headsetSmGetTask(), SM_INTERNAL_POWER_ON_300MS_TIMER, NULL, 300);
+}
+#endif
+
+#ifdef ENABLE_APP_AUTO_POWEROFF_TIMER
+static bool g_AppPairingMode = FALSE;
+
+void appSetPairingFlag(bool val)
+{
+    g_AppPairingMode = val;
+}
+
+bool appGetPairingFlag(void)
+{
+    return g_AppPairingMode;
+}
+#endif
+
+#ifdef ENABLE_APP_OTA_FINISH_RECONNECT_LED
+static bool g_IsOtaRebootFlag = FALSE;
+
+void appSetOtaRebootFlag(bool val)
+{
+    g_IsOtaRebootFlag = val;
+}
+
+bool appGetOtaRebootFlag(void)
+{
+    return g_IsOtaRebootFlag;
+}
+#endif
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+static bool g_MuteMainFlag = FALSE;
+
+void appSetMuteMainFlag(bool val)
+{
+    g_MuteMainFlag = val;
+}
+
+bool appGetMuteMainFlag(void)
+{
+    return g_MuteMainFlag;
+}
+
+void appSpeakerAmpUnMute(void)
+{
+    PioSetFunction(PIO2MASK(PIO43),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+    PioSetDir32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+    PioSet32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+
+    PioSetFunction(PIO2MASK(PIO40),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+    PioSetDir32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+    PioSet32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+}
+
+void appSpeakerAmpMute(void)
+{
+    PioSetFunction(PIO2MASK(PIO40),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+    PioSetDir32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+    PioSet32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),0);
+
+    PioSetFunction(PIO2MASK(PIO43),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+    PioSetDir32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+    PioSet32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),0);
+}
+
+void appEnableSpeakerMuteTimer(void)
+{
+    MessageCancelAll(headsetSmGetTask(), SM_INTERNAL_APP_MUTE_MAIN_VOLUME);
+    MessageSendLater(headsetSmGetTask(), SM_INTERNAL_APP_MUTE_MAIN_VOLUME, NULL, D_SEC(20));
+}
+
+void appEnableSpeakerUnMuteTimer(void)
+{
+    MessageCancelAll(headsetSmGetTask(), SM_INTERNAL_APP_UNMUTE_MAIN_VOLUME);
+    MessageSendLater(headsetSmGetTask(), SM_INTERNAL_APP_UNMUTE_MAIN_VOLUME, NULL, D_SEC(10));
+}
+
+void appDisableSpeakerMuteTimer(void)
+{
+    if (appGetMuteMainFlag() == TRUE)
+    {
+        appSpeakerAmpUnMute();
+        appSetMuteMainFlag(FALSE);
+    }
+
+    MessageCancelAll(headsetSmGetTask(), SM_INTERNAL_APP_MUTE_MAIN_VOLUME);
+    MessageCancelAll(headsetSmGetTask(), SM_INTERNAL_APP_UNMUTE_MAIN_VOLUME);
+}
+
+#endif
+
+#ifdef ENABLE_APP_FIX_BLE_CONNECTED_LED
+static bool g_BleConnectedFlag = FALSE;
+
+void appSetBlePairingFlag(bool val)
+{
+    g_BleConnectedFlag = val;
+}
+
+bool appGetBleConnectedFlag(void)
+{
+    return g_BleConnectedFlag;
+}
+#endif
 
 #endif /* INCLUDE_USB_DEVICE */

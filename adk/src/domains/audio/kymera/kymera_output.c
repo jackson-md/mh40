@@ -655,3 +655,16 @@ void KymeraOutput_MuteMainChannel(bool mute_enable)
     appKymeraSourceSyncSetMonoRouteGain(output, theKymera->output_rate,
                                         appConfigSyncUnmuteTransitionSamples(), gain_in_db);
 }
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+void appKymeraOutput_SetMainVolumeMute(bool val)
+{
+    DEBUG_LOG_FN_ENTRY("appKymeraOutput_SetMainVolumeMute: %d", val);
+    Operator vol_op;
+
+    if (GET_OP_FROM_CHAIN(vol_op, KymeraGetTaskData()->chain_output_handle, OPR_VOLUME_CONTROL))
+    {
+        OperatorsVolumeMute(vol_op, val);
+    }
+}
+#endif

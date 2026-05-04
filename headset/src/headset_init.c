@@ -181,6 +181,33 @@
 #include <app/bluestack/dm_prim.h>
 #endif
 
+#ifdef ENABLE_APP_LOW_LEVEL_BUTTON
+#include "pio_monitor.h"
+#endif
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+#include "pio_common.h"
+#endif
+
+#ifdef ENABLE_APP_HID_COMMAND
+#include "production_test_hid.h"
+#endif
+
+/* INN_kenny 20220928 LE CODE */
+#ifdef ENABLE_APP_KENNY_LE_CODE
+#include "le_app_kenny_advertising.h"
+#endif
+
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+#include <device_sync_pskey.h>
+#include <device_pskey.h>
+#include <remote_name.h>
+#endif
+
+#ifdef INCLUDE_GATT_DEVICE_INFO_SERVER
+#include "gatt_server_dis.h"
+#endif
+
 #ifdef INCLUDE_MUSIC_PROCESSING
     voice_ui_eq_if_t voice_ui_eq_if =
     {
@@ -217,6 +244,10 @@ static bool headsetInitDeviceDbSerialiser(Task init_task)
 
     BtDevice_RegisterPropertyDefaults(&default_value_callback_list);
 
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+    DevicePsKey_RegisterPddu();
+#endif
+
     /* Register persistent device data users */
     BtDevice_RegisterPddu();
 
@@ -251,6 +282,104 @@ static const InputActionMessage_t* headsetInitGetInputActions(uint16* input_acti
 
     return input_actions;
 }
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+static bool appSetPioPullBias(unsigned pio)
+{
+    pio_common_allbits mask;
+
+    PioCommonBitsInit(&mask);
+    PioCommonBitsSetBit(&mask, pio);
+    PioCommonSetMap(&mask, &mask);
+
+    return PioCommonSetPio(pio, pio_pull, TRUE);
+}
+
+static void appBatteryChargerEnPioInit(void)
+{
+    /* Setup 'on' PIO as output (driving high) */
+    uint16 bank = PIO2BANK(PIO15_CHEN);
+    uint32 mask = PIO2MASK(PIO15_CHEN);
+    PioSetMapPins32Bank(bank, mask, mask);
+    PioSetDir32Bank(bank, mask, mask);
+    PioSet32Bank(bank, mask, mask);
+}
+
+static void appBatteryChargerPioInit(void)
+{
+    appSetPioPullBias(PIO42_CHOK);
+    appSetPioPullBias(PIO44_CHRG);
+
+    appBatteryChargerEnPioInit();
+}
+
+void appDisableExternalBatteryCharing(void)
+{
+    uint16 bank = PIO2BANK(PIO15_CHEN);
+    uint32 mask = PIO2MASK(PIO15_CHEN);
+    PioSet32Bank(bank, mask, mask);
+}
+
+void appEnableExternalBatteryCharing(void)
+{
+    uint16 bank = PIO2BANK(PIO15_CHEN);
+    uint32 mask = PIO2MASK(PIO15_CHEN);
+    PioSet32Bank(bank, mask, 0);
+}
+
+bool isAppBatteryComplete(void)
+{
+    return (!PioCommonGetPio(PIO42_CHOK));
+}
+
+bool isAppBatteryCharing(void)
+{
+    return (!PioCommonGetPio(PIO44_CHRG));
+}
+
+
+bool isAppBatteryCharingComplete(void)
+{
+    return ((PioCommonGetPio(PIO42_CHOK) ==  FALSE) &&
+            (PioCommonGetPio(PIO44_CHRG) ==  TRUE));
+}
+#endif
+
+#ifdef ENABLE_APP_LDO_SPEAKER_CONTROL
+static void appEnableSpeakerInit(void)
+{
+    PioSetFunction(PIO2MASK(PIO40),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+    PioSetDir32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+    PioSet32Bank(PIO2BANK(PIO40),PIO2MASK(PIO40),PIO2MASK(PIO40));
+
+    PioSetFunction(PIO2MASK(PIO43),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+    PioSetDir32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+    PioSet32Bank(PIO2BANK(PIO43),PIO2MASK(PIO43),PIO2MASK(PIO43));
+}
+#endif
+
+#ifdef ENABLE_APP_LOW_LEVEL_BUTTON
+static void appLowLevelButtonInit(void)
+{
+    PioSetFunction(PIO2MASK(PIO2),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO2),PIO2MASK(PIO2),PIO2MASK(PIO2));
+    PioSetDir32Bank(PIO2BANK(PIO2),PIO2MASK(PIO2),0);
+    PioSet32Bank(PIO2BANK(PIO2),PIO2MASK(PIO2),PIO2MASK(PIO2));
+
+    PioSetFunction(PIO2MASK(PIO3),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO3),PIO2MASK(PIO3),PIO2MASK(PIO3));
+    PioSetDir32Bank(PIO2BANK(PIO3),PIO2MASK(PIO3),0);
+    PioSet32Bank(PIO2BANK(PIO3),PIO2MASK(PIO3),PIO2MASK(PIO3));
+
+    PioSetFunction(PIO2MASK(PIO4),PIO);
+    PioSetMapPins32Bank(PIO2BANK(PIO4),PIO2MASK(PIO4),PIO2MASK(PIO4));
+    PioSetDir32Bank(PIO2BANK(PIO4),PIO2MASK(PIO4),0);
+    PioSet32Bank(PIO2BANK(PIO4),PIO2MASK(PIO4),PIO2MASK(PIO4));
+}
+#endif
+
 /*! \brief Utility function to init event manager   */
 static bool headsetInputEventMangerInit(Task init_task)
 {
@@ -265,6 +394,19 @@ static bool headsetInputEventMangerInit(Task init_task)
     * the target platform. Connect to the UI domain. */
     InputEventManagerInit(Ui_GetUiTask(), input_actions,
                           input_actions_dim, &input_event_config);
+
+#ifdef ENABLE_APP_LDO_SPEAKER_CONTROL
+    appEnableSpeakerInit();
+#endif
+
+#ifdef ENABLE_APP_LOW_LEVEL_BUTTON
+    appLowLevelButtonInit();
+#endif
+
+#ifdef ENABLE_APP_BATTERY_CHARGER_PIO_SETTING
+    appBatteryChargerPioInit();
+#endif
+
     return TRUE;
 }
 
@@ -562,6 +704,17 @@ static const system_state_step_t headsetInitTable[] =
     {appDeviceInit,         INIT_READ_LOCAL_BD_ADDR_CFM, appDeviceHandleClDmLocalBdAddrCfm},
     {BandwidthManager_Init, 0, NULL},
     {BredrScanManager_Init, BREDR_SCAN_MANAGER_INIT_CFM, NULL},
+
+#ifdef ENABLE_APP_MD_GAIA
+    {LocalName_TymPsKeyNameCheck, 0, NULL},
+#endif
+
+#ifdef ENABLE_APP_HID_COMMAND
+/* INN_Ou 20220802, Init default pskey serial number  --- start --- */
+    {SerialNumber_InnPsKeyInit, 0, NULL},
+/* INN_Ou 20220802, Init default pskey serial number  ---- end ---- */
+#endif
+
     {LocalName_Init,        LOCAL_NAME_INIT_CFM, NULL},
     {LeAdvertisingManager_Init,     0, NULL},
     {LeScanManager_Init,    0, NULL},
@@ -592,11 +745,26 @@ static const system_state_step_t headsetInitTable[] =
     {GattConnect_Init,      0, NULL},   // GATT functionality is initialised by calling GattConnect_Init then GattConnect_ServerInitComplete.
     // All GATT Servers MUST be initialised after GattConnect_Init and before GattConnect_ServerInitComplete.
     {GattHandlerInit,       0, NULL},
+
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+    {DeviceSyncPsKey_Init,  0, NULL},
+#endif
+
 #ifdef INCLUDE_GATT_BATTERY_SERVER
     {GattServerBattery_Init,0, NULL},
 #endif
     {GattServerGatt_Init,   0, NULL},
     {GattServerGap_Init,    0, NULL},
+
+#ifdef INCLUDE_GATT_DEVICE_INFO_SERVER
+    {GattServerDeviceInfo_Init,    0, NULL},
+#endif
+
+/* INN_kenny 20220928 LE CODE */
+#ifdef ENABLE_APP_KENNY_LE_CODE
+    {AppAdvertisingData_Init,    0, NULL},
+#endif
+
     {ProfileManager_Init,   0, NULL},
     {HandsetService_Init,   0, NULL},
     {StereoTopology_Init,  0, NULL},
@@ -660,6 +828,11 @@ static const system_state_step_t headsetInitTable[] =
         {Gaa_Init, 0, NULL},
 #endif
     {AudioCuration_Init, 0, NULL},
+
+#ifdef ENABLE_APP_MD_GAIA_GET_PDL_INFO
+    {RemoteName_Init,    0, NULL},
+#endif
+
 #ifdef INCLUDE_GAMING_MODE
     {GamingMode_init, 0, NULL},
 #endif

@@ -1066,4 +1066,55 @@ void appTestUsbCdcDeInit(void);
 
 #endif /* INCLUDE_USB_DEVICE */
 
+#ifdef ENABLE_APP_MD_GAIA
+bool appSetPsSerialNumber(uint16 size, uint8 *data);
+bool appGetPsSerialNumber(uint16 *size, uint8 *data);
+#endif
+
+#ifdef ENABLE_APP_EQ_SWITCH
+extern bool appSetEqMode(uint8 mode);
+#endif
+
+#ifdef ENABLE_APP_SIDETONE
+extern void appSetSideTone(bool val);
+#endif
+
+#ifdef ENABLE_APP_HID_COMMAND
+void appTestEnterPairingMode(void);
+#endif
+
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+extern void appSetAllowPoweronReconnectFlag(bool val);
+extern bool appGetAllowPoweronReconnectFlag(void);
+extern void appPoweronReconnect(void);
+#endif
+
+#ifdef ENABLE_APP_AUTO_POWEROFF_TIMER
+extern void appSetPairingFlag(bool val);
+extern bool appGetPairingFlag(void);
+#endif
+
+
+#ifdef ENABLE_APP_OTA_FINISH_RECONNECT_LED
+extern void appSetOtaRebootFlag(bool val);
+extern bool appGetOtaRebootFlag(void);
+#endif
+
+#ifdef ENABLE_APP_FIX_PO_NOISE
+extern void appSpeakerAmpMute(void);
+extern void appSpeakerAmpUnMute(void);
+
+extern void appSetMuteMainFlag(bool val);
+extern bool appGetMuteMainFlag(void);
+
+extern void appEnableSpeakerMuteTimer(void);
+extern void appEnableSpeakerUnMuteTimer(void);
+extern void appDisableSpeakerMuteTimer(void);
+#endif
+
+#ifdef ENABLE_APP_FIX_BLE_CONNECTED_LED
+void appSetBlePairingFlag(bool val);
+bool appGetBleConnectedFlag(void);
+#endif
+
 #endif // HEADSET_TEST_H

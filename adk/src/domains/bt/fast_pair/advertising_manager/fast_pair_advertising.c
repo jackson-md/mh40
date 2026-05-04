@@ -321,7 +321,6 @@ static void fastpair_CheckAdvIntervalInRange(le_adv_data_set_t data_set)
 static unsigned int fastPair_AdvGetNumberOfItems(const le_adv_data_params_t * params)
 {
     unsigned int number=0;
-
     if(params->data_set != le_adv_data_set_peer)
     {
         bool identifiable = (params->data_set == le_adv_data_set_handset_identifiable ? TRUE : FALSE);

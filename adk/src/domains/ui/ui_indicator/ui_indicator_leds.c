@@ -17,6 +17,19 @@
 #include <led_manager.h>
 #include <power_manager.h>
 
+#ifdef ENABLE_APP_FIX_MULTI_CONNECTION_IDLE_LED
+#include "ui_inputs.h"
+#include "hfp_profile.h"
+#include "av.h"
+#include "headset_sm.h"
+#endif
+
+#ifdef ENABLE_APP_FIX_BLE_CONNECTED_LED
+#include "headset_test.h"
+#include "pairing.h"
+#include "headset_leds_config_table.h"
+#endif
+
 ui_leds_task_data_t the_leds;
 
 static bool uiLeds_GetLedIndexFromMappingTable(MessageId id, uint16 * led_index)
@@ -53,6 +66,7 @@ static const ui_led_data_t * uiLeds_GetDataForLed(uint16 led_index)
     return return_data;
 }
 
+#if 0
 static void uiLeds_DoSetPattern(const ui_led_data_t *config, uint16 led_index)
 {
     uint16 *client_lock = NULL;
@@ -98,6 +112,40 @@ static void uiLeds_DoSetPattern(const ui_led_data_t *config, uint16 led_index)
          LedManager_SetPattern(config->data.pattern, config->priority, client_lock, client_lock_mask);
     }
 }
+
+#else
+static void uiLeds_DoSetPattern(const ui_led_data_t *config, uint16 led_index)
+{
+    uint16 *client_lock = NULL;
+    uint16 client_lock_mask = 0;
+
+    DEBUG_LOG_V_VERBOSE("uiLeds_DoSetPattern enum:led_priority_t:%d", config->priority);
+
+    bool is_context_indication = !!(led_index & CONTEXT_INDICATION_MASK);
+    if (!is_context_indication)
+    {
+        UiIndicator_ScheduleIndicationCompletedMessage(
+                the_leds.sys_event_to_led_data_mappings,
+                the_leds.event_mapping_table_size,
+                led_index,
+                UI_INTERNAL_LED_FLASH_COMPLETED,
+                &the_leds.task,
+                &the_leds.led_event_flash_ongoing_mask,
+                &client_lock,
+                &client_lock_mask);
+
+        if (the_leds.sys_event_to_led_data_mappings[led_index].await_indication_completion)
+        {
+            /* If the configured LED Flash event needs to be indicated prior to a shutdown,
+               ensure the LED manager is enabled in order to show the LED flash. (The flash
+               may need to be indicated in order to complete a shutdown procedure). */
+            LedManager_Enable(TRUE);
+        }
+    }
+
+    LedManager_SetPattern(config->data.pattern, config->priority, client_lock, client_lock_mask);
+}
+#endif
 
 static void uiLed_PerformLedAction(const ui_led_data_t *config, uint16 led_index)
 {
@@ -214,6 +262,32 @@ static void uiLeds_DoContextUpdate(UI_PROVIDER_CONTEXT_UPDATED_T * msg)
     uint16 led_index = 0;
 
     DEBUG_LOG("uiLeds_DoContextUpdate enum:ui_providers_t:%d Context=%02x", msg->provider, msg->context);
+    DEBUG_LOG("uiLeds_DoContextUpdate BtDevice_GetNumberOfHandsetsConnected: %d", BtDevice_GetNumberOfHandsetsConnected());
+
+#ifdef ENABLE_APP_FIX_MULTI_CONNECTION_IDLE_LED
+    if ((msg->provider == ui_provider_app_sm) && (msg->context == context_app_sm_idle))
+    {
+        if ((appAvHasAConnection() == TRUE) || (appHfpIsConnected() == TRUE))
+        {
+            return;
+        }
+    }
+#endif
+
+#ifdef ENABLE_APP_FIX_BLE_CONNECTED_LED
+    if (appGetBleConnectedFlag() == TRUE)
+    {
+        if ((msg->provider == ui_provider_handset_pairing) && (msg->context == context_handset_pairing_active))
+        {
+            return;
+        }
+        else if ((msg->provider == ui_provider_handset_pairing) && (msg->context == context_handset_pairing_idle))
+        {
+            appSetBlePairingFlag(FALSE);
+            return;
+        }
+    }
+#endif
 
     if (uiLeds_getMatchingContextIndex(msg->provider, msg->context, &led_index))
     {
@@ -342,4 +416,29 @@ void UiLeds_NotifyUiIndication(uint16 led_index)
     config = uiLeds_GetDataForLed(led_index);
 
     uiLed_PerformLedAction(config, led_index);
+}
+
+void UiLeds_RefleshContex(void)
+{
+    uint16 idx;
+    uint16 ctxIdx;
+    if(the_leds.curr_indicated_provider < ui_providers_max)
+    {
+        ctxIdx = Ui_GetUiProviderContext(the_leds.curr_indicated_provider);
+        DEBUG_LOG("---INN---led reflesh %d %d",the_leds.curr_indicated_provider, ctxIdx);
+        if (uiLeds_getMatchingContextIndex(the_leds.curr_indicated_provider, ctxIdx, &idx))
+        {
+            const ui_led_data_t *config = uiLeds_GetDataForLed(ctxIdx);
+            LedManager_StopPattern(config->priority);
+            DEBUG_LOG("---INN---reflesh");
+            MESSAGE_MAKE(message,UI_PROVIDER_CONTEXT_UPDATED_T);
+            message->provider = the_leds.curr_indicated_provider;
+            message->context = ctxIdx;
+            MessageSend(&the_leds.task,
+                        UI_PROVIDER_CONTEXT_UPDATED,
+                        message);
+            the_leds.curr_indicated_context_index = LED_NONE;
+            the_leds.curr_indicated_provider = LED_NONE;
+        }
+    }
 }

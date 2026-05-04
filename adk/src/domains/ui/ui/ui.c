@@ -31,6 +31,12 @@
 #include <message_broker.h>
 #include <multidevice.h>
 
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+#include "headset_test.h"
+#include "headset_sm.h"
+#include "../workspace/QCC5141-AA_DEV-BRD-R2-AA/depend_debug_qcc514x_qcc304x/2_button.h"
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_TYPE(ui_message_t)
 LOGGING_PRESERVE_MESSAGE_ENUM(ui_internal_led_messages)
@@ -179,6 +185,30 @@ static void ui_SendUiInputToConsumerGroupTaskList(ui_input_t ui_input, uint32 de
 
 static void ui_HandleLogicalInput(unsigned logical_input, bool is_right)
 {
+
+    DEBUG_LOG_VERBOSE("---------kenny----------");
+    DEBUG_LOG_VERBOSE("logical_input = %x",logical_input);
+
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+    if(logical_input == APP_POWER_BUTTON_SHORT_PRESS_RELEASE)
+    {
+        if(appGetAllowPoweronReconnectFlag() == TRUE)
+        {
+            return;
+        }
+    }
+
+    else if(logical_input == APP_POWER_BUTTON_VLONG_PRESS)
+    {
+        if(appGetAllowPoweronReconnectFlag() == TRUE)
+        {
+            appHeadsetSetState(HEADSET_STATE_IDLE);
+            appTestPairHandset();
+            return;
+        }
+    }
+#endif
+
     /* Check whether the Application is screening Logical Inputs, if so dispose of it. */
     if (logical_input_screening_decider_funcptr &&
         logical_input_screening_decider_funcptr(logical_input))
@@ -342,6 +372,8 @@ void Ui_UnregisterContextConsumers(void)
 
 void Ui_InformContextChange(ui_providers_t ui_provider,unsigned latest_ctxt)
 {
+    //DEBUG_LOG("--- OYH --- Ui_InformContextChange, ui_provider = %d, context = %d", ui_provider, latest_ctxt);
+
     for(uint8 index=0; index<num_of_ctxt_consumers; index++)
     {
         if (ui_provider_context_consumers[index].ui_provider_id == ui_provider &&

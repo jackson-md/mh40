@@ -49,13 +49,21 @@
 #elif defined(HAVE_3_LEDS)
 
 /* The number of LEDs led_manager will control. */
+#ifdef ENABLE_APP_ADD_LED3
+#define appConfigNumberOfLeds()  (4)
+#else
 #define appConfigNumberOfLeds()  (3)
+#endif
 /*! PIO to control LED0 */
 #define appConfigLed0Pio()       CHIP_LED_0_PIO
 /*! PIO to control LED1 */
 #define appConfigLed1Pio()       CHIP_LED_1_PIO
 /*! PIO to control LED2 */
 #define appConfigLed2Pio()       CHIP_LED_2_PIO
+
+#ifdef ENABLE_APP_ADD_LED3
+#define appConfigLed3Pio()       CHIP_LED_3_PIO
+#endif
 
 #else
 #error LED config not correctly defined.

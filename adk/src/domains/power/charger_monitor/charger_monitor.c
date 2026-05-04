@@ -27,6 +27,10 @@
 #include "led_manager_protected.h"
 #endif
 
+#ifdef ENABLE_APP_NTC_HANDLE
+#include "headset_init.h"
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_TYPE(chargerMessages)
 
@@ -322,6 +326,20 @@ static void charger_SetFastCurrent(uint16 fast_current)
     {
         Charger_DisableReasonClear(CHARGER_DISABLE_REASON_ZERO_CURRENT);
     }
+
+#ifdef ENABLE_APP_NTC_HANDLE
+    if (Charger_IsConnected() == TRUE)
+    {
+        if (fast_current == FAST_CHARGE_CURRENT)
+        {
+            appEnableExternalBatteryCharing();
+        }
+        else
+        {
+            appDisableExternalBatteryCharing();
+        }
+    }
+#endif
 }
 
 void Charger_UpdateCurrent(void)
@@ -385,7 +403,10 @@ void Charger_HandleChange(void)
         if (usb_leds_forced_off)
         {
             DEBUG_LOG_ALWAYS("Charger: USB suspend, force LEDs off");
+            //LedManager_ForceLeds(0);
+#ifndef ENABLE_APP_FIX_USB_PLUGIN_LED_OFF_ISSUE
             LedManager_ForceLeds(0);
+#endif
         }
         else
         {

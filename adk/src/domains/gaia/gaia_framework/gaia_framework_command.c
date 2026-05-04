@@ -46,13 +46,24 @@ void GaiaFrameworkCommand_CommandHandler(const GAIA_COMMAND_IND_T *ind)
     DEBUG_LOG_DEBUG("gaiaFramework_CommandHandler, vendor_id %d, command_id 0x%04x, size_payload %u",
                     ind->vendor_id, ind->command_id, ind->size_payload);
 
-    const uint8 feature_id = gaiaFrameworkCommand_GetFeatureID(ind->command_id);
-    const uint8 pdu_type = gaiaFrameworkCommand_GetPduType(ind->command_id);
-    const uint8 pdu_specific_id = gaiaFrameworkCommand_GetPduSpecificId(ind->command_id);
+    uint8 feature_id = gaiaFrameworkCommand_GetFeatureID(ind->command_id);
+    uint8 pdu_type = gaiaFrameworkCommand_GetPduType(ind->command_id);
+    uint8 pdu_specific_id = gaiaFrameworkCommand_GetPduSpecificId(ind->command_id);
+
+#ifdef ENABLE_APP_MD_GAIA
+    if (ind->vendor_id == MD_APP_VENDOR_ID)
+    {
+        feature_id = gaia_MD_GetFeatureID(ind->command_id);
+        pdu_type = gaia_MD_GetPduType(ind->command_id);
+    }
+#endif
 
     switch (ind->vendor_id)
     {
         case GAIA_V3_VENDOR_ID:
+#ifdef ENABLE_APP_MD_GAIA
+        case MD_APP_VENDOR_ID:
+#endif
         {
             DEBUG_LOG("gaiaFramework_CommandHandler, feature_id %u, pdu_type %u, pdu_specific_id %u",
                       feature_id, pdu_type, pdu_specific_id);
@@ -63,7 +74,18 @@ void GaiaFrameworkCommand_CommandHandler(const GAIA_COMMAND_IND_T *ind)
                 case feature_not_handled:
                     DEBUG_LOG_ERROR("gaiaFramework_CommandHandler, unsupported feature_id %u, pdu_type %u, pdu_specific_id %u",
                                     feature_id, pdu_type, pdu_specific_id);
-                    GaiaFramework_SendError(ind->transport, feature_id, pdu_specific_id, feature_not_supported);
+                    //GaiaFramework_SendError(ind->transport, feature_id, pdu_specific_id, feature_not_supported);
+#ifdef ENABLE_APP_MD_GAIA
+                    if(ind->vendor_id == MD_APP_VENDOR_ID)
+                    {
+                        GaiaFramework_MD_SendError(ind->transport, feature_id, pdu_specific_id, feature_not_supported);
+                    }
+                    else
+#else
+                    {
+                        GaiaFramework_SendError(ind->transport, feature_id, pdu_specific_id, feature_not_supported);
+                    }
+#endif
                     Gaia_CommandResponse(ind->transport, ind->size_payload, ind->payload);
                     break;
 

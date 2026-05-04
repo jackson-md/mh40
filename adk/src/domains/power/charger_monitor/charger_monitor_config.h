@@ -42,7 +42,11 @@
 
 /*! Fast-charge (constant voltage) to standby transition point.
     Percentage of the fast charge current */
+#ifdef ENABLE_APP_NTC_HANDLE
+#define appConfigChargerTerminationCurrent()           (35)
+#else
 #define appConfigChargerTerminationCurrent()           (10)
+#endif
 
 /*! Fast-charge Vfloat voltage */
 #define appConfigChargerTerminationVoltage()           (4200)

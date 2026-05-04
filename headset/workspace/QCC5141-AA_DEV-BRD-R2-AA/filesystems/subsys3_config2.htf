@@ -27,3 +27,10 @@ DigMic2PioConfig = [ff ff]
 CodecOutputDisableTimeout = 28000000
 
 AncEnableDelay = 300
+
+# --- ENABLE_APP_SPEAKER_CLASS_AB_MODE START ---
+# true for Class-AB, false for Class-D
+Codec0UseClassABAmplifier = true
+# to obtain best THD near full scale
+Codec0OutAmpQualityMode = true
+# --- ENABLE_APP_SPEAKER_CLASS_AB_MODE  END  ---

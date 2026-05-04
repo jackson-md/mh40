@@ -20,6 +20,10 @@
 #include <ps.h>
 #include <ps_key_map.h>
 
+#ifdef ENABLE_APP_EQ_SWITCH
+#include "headset_sm.h"
+#endif
+
 #define PS_KEY_USER_EQ_PRESET_INDEX    0
 #define PS_KEY_USER_EQ_START_GAINS_INDEX    1
 
@@ -124,8 +128,15 @@ void Kymera_ConfigureMusicProcessing(uint32 sample_rate)
         if(user_eq)
         {
             OperatorsStandardSetSampleRate(user_eq, sample_rate);
+
 #if defined(INCLUDE_MUSIC_PROCESSING)
+#ifdef ENABLE_APP_MD_GAIA
+#ifdef ENABLE_APP_EQ_SWITCH
+            appHeadSetEqMode(appGetEqmode());
+#endif
+#else
             Kymera_SelectEqBankNow(KymeraGetTaskData()->eq.selected_eq_bank);
+#endif
 #endif
         }
 

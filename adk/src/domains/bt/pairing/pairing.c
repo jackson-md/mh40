@@ -2,7 +2,7 @@
 \copyright  Copyright (c) 2008 - 2022 Qualcomm Technologies International, Ltd.
             All Rights Reserved.
             Qualcomm Technologies International, Ltd. Confidential and Proprietary.
-\version    
+\version
 \file       pairing.c
 \brief      Pairing task
 */
@@ -37,6 +37,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <logging.h>
+
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+#include "headset_test.h"
+#endif
 
 /*! Check the message ranges are pemitted */
 ASSERT_MESSAGE_GROUP_NOT_OVERFLOWED(PAIRING, PAIRING_MESSAGE_END)
@@ -83,7 +87,7 @@ static unsigned pairing_GetCurrentContext(void)
 static void pairing_ResetPendingBleAddress(void)
 {
     pairingTaskData *thePairing = PairingGetTaskData();
-    
+
     BdaddrTypedSetEmpty(&thePairing->pending_ble_address);
 }
 
@@ -95,7 +99,7 @@ static void pairing_ResetIoCapsRcvdBdAddr(void)
 }
 
 
-/*! \brief Notify clients of pairing activity. 
+/*! \brief Notify clients of pairing activity.
 
     \param status The activity to notify. This should be from the #pairingActivityStatus enum.
     \param device_addr The Bluetooth address associated with the status. In most cases NULL.
@@ -172,7 +176,11 @@ static void pairing_EnterIdle(pairingTaskData *thePairing)
     /* Disallow BLE pairing if there is no timeout guarding the BLE permission */
     if (!MessagePendingFirst(&thePairing->task, PAIRING_INTERNAL_LE_PAIR_TIMEOUT, NULL))
     {
+#ifndef ENABLE_APP_IMPROVE_BLE_CONNECTION
         thePairing->ble_permission = pairingBleDisallowed;
+#else
+        thePairing->ble_permission = pairingBleOnlyPairedDevices;
+#endif
     }
 
     /* reset IO caps received handset address so allow pairing for new handset */
@@ -225,6 +233,13 @@ static void pairing_EnterDiscoverable(pairingTaskData *thePairing)
 
     /* notify clients that pairing is in progress */
     pairing_MsgActivity(pairingActivityInProgress, NULL, FALSE);
+
+#ifdef ENABLE_APP_POWERON_ENTER_PAIRING
+    if(appGetAllowPoweronReconnectFlag() == TRUE)
+    {
+        appSetAllowPoweronReconnectFlag(FALSE);
+    }
+#endif
 }
 
 static void pairing_ExitDiscoverable(pairingTaskData *thePairing)
@@ -559,10 +574,10 @@ static void pairing_HandleClSmAuthenticateConfirm(const CL_SM_AUTHENTICATE_CFM_T
                 !BdaddrIsSame(&thePairing->device_io_caps_rcvd_bdaddr, &cfm->bd_addr))
             {
                 /* Getting here suggests that multiple AGs trying to pair to us.
-                Except first AG, all other AG's IO caps get rejected in LI_PENDING_AUTHENTICATION. 
+                Except first AG, all other AG's IO caps get rejected in LI_PENDING_AUTHENTICATION.
                 This results AG to abort the pairing and sending the authentication failure(apps
                 receives CL_SM_AUTHENTICATE_CFM(auth_status_fail)).
-                Just swallow the CL_SM_AUTHENTICATE_CFM(auth_status_fail) message and wait for 
+                Just swallow the CL_SM_AUTHENTICATE_CFM(auth_status_fail) message and wait for
                 CL_SM_AUTHENTICATE_CFM(auth_status_success) from AG whose IO caps have been accepted.*/
                 DEBUG_LOG_VERBOSE("pairing_HandleClSmAuthenticateConfirm, authentication failed ignore");
                 break;
@@ -609,7 +624,7 @@ static void pairing_HandleClSmAuthenticateConfirm(const CL_SM_AUTHENTICATE_CFM_T
 
                         /* Allow ble connections only with paired device after br/edr pairing. */
                         thePairing->ble_permission = pairingBleOnlyPairedDevices;
-                        MessageSendLater(&thePairing->task, 
+                        MessageSendLater(&thePairing->task,
                                          PAIRING_INTERNAL_LE_PAIR_TIMEOUT, NULL,
                                          D_SEC(appConfigLePairingDisableTimeout()));
                         /* Send confirmation to main task */
@@ -644,7 +659,7 @@ static void pairing_HandleClSmAuthenticateConfirm(const CL_SM_AUTHENTICATE_CFM_T
     If we are expecting a connection, notify the connection library if we accept
     or reject the connection.
 
-    \note The response from the function is purely based on the state of the 
+    \note The response from the function is purely based on the state of the
           pairing module. That is, TRUE is returned only if we are expecting
           a connection.
 
@@ -702,7 +717,7 @@ static bool pairing_HandleClSmAuthoriseIndication(const CL_SM_AUTHORISE_IND_T *i
          * We can allow upper layers to decide whether to authorise this connection or not. */
         DEBUG_LOG("pairing_HandleClSmAuthoriseIndication Ignore while CTKD is ongoing");
     }
-    else if (pairing_GetState(thePairing) == PAIRING_STATE_PENDING_AUTHENTICATION || 
+    else if (pairing_GetState(thePairing) == PAIRING_STATE_PENDING_AUTHENTICATION ||
              pairing_GetState(thePairing) == PAIRING_STATE_LI_PENDING_AUTHENTICATION)
     {
         DEBUG_LOG("pairing_HandleClSmAuthoriseIndication Reject. Awaiting pairing.");
@@ -763,7 +778,7 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
         {
             thePairing->pending_ble_address = ind->tpaddr.taddr;
         }
-        
+
         /* If pairing is in progress, then do not accept the bonding request from second handset */
         if((pairing_GetState(thePairing) == PAIRING_STATE_DISCOVERABLE) || (pairing_GetState(thePairing) == PAIRING_STATE_IDLE))
         {
@@ -786,10 +801,13 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
             DEBUG_LOG_VERBOSE("pairing_HandleClSmIoCapabilityReqIndication Handling BLE pairing. Addr %06x BREDR Keys Exist:%d",
                               ind->tpaddr.taddr.addr.lap, ind->link_key_exists);
 
+#ifdef ENABLE_APP_FIX_BLE_CONNECTED_LED
+            appSetBlePairingFlag(TRUE);
+#endif
             switch (pairing_GetState(thePairing))
             {
                 case PAIRING_STATE_LI_PENDING_AUTHENTICATION:
-                    /* Only accept IO caps from the AG whose IO caps accepted in 
+                    /* Only accept IO caps from the AG whose IO caps accepted in
                     discoverable state. Reject the IO caps from other AGs */
                     if(BdaddrIsSame(&thePairing->device_io_caps_rcvd_bdaddr, &ind->tpaddr.taddr.addr))
                     {
@@ -830,9 +848,9 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
                     {
                         DEBUG_LOG_VERBOSE("pairing_HandleClSmIoCapabilityReqIndication. BLE pairing not allowed");
                         response.bonding = FALSE;
-                        /* 
+                        /*
                         If the pairing state is not moved to PAIRING_STATE_LI_PENDING_AUTHENTICATION, pairing state would still
-                        be in IDLE state and when CL_SM_BLE_SIMPLE_PAIRING_COMPLETE_IND_T is received later, pairing_Complete is 
+                        be in IDLE state and when CL_SM_BLE_SIMPLE_PAIRING_COMPLETE_IND_T is received later, pairing_Complete is
                         called with pairing_failed as status and again the pairing state will be moved to IDLE leading to a panic.
                         */
                         pairing_SetState(thePairing, PAIRING_STATE_LI_PENDING_AUTHENTICATION);
@@ -854,7 +872,7 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
                         thePairing->smp_ctkd_expected = FALSE;
                         thePairing->smp_ctkd_ongoing = TRUE;
                     }
-					
+
                     response.io_capability = cl_sm_io_cap_no_input_no_output;
 
                     response.key_distribution = (KEY_DIST_RESPONDER_ENC_CENTRAL |
@@ -867,7 +885,7 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
                     this handset is completed.*/
                     thePairing->device_io_caps_rcvd_bdaddr = ind->tpaddr.taddr.addr;
 
-                    /* pairing started locally, IO caps from AG is received 
+                    /* pairing started locally, IO caps from AG is received
                     wait for authentication in LI_PENDING_AUTHENTICATION state.*/
                     pairing_SetState(thePairing, PAIRING_STATE_LI_PENDING_AUTHENTICATION);
                 }
@@ -895,7 +913,7 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
             switch (pairing_GetState(thePairing))
             {
                 case PAIRING_STATE_LI_PENDING_AUTHENTICATION:
-                    /* Only accept IO caps from the AG whose IO caps accepted in 
+                    /* Only accept IO caps from the AG whose IO caps accepted in
                     discoverable state. Reject the IO caps from other AGs */
                     if(BdaddrIsSame(&thePairing->device_io_caps_rcvd_bdaddr, &ind->tpaddr.taddr.addr))
                     {
@@ -913,7 +931,7 @@ static void pairing_HandleClSmIoCapabilityReqIndication(const CL_SM_IO_CAPABILIT
                     this handset is completed.*/
                     thePairing->device_io_caps_rcvd_bdaddr = ind->tpaddr.taddr.addr;
 
-                    /* pairing started locally, IO caps from AG is received 
+                    /* pairing started locally, IO caps from AG is received
                     wait for authentication in LI_PENDING_AUTHENTICATION state.*/
                     pairing_SetState(thePairing, PAIRING_STATE_LI_PENDING_AUTHENTICATION);
                     break;
@@ -1225,11 +1243,11 @@ static void pairing_HandleClSmBleSimplePairingCompleteInd(const CL_SM_BLE_SIMPLE
     /* Any ongoing CTKD has just been completed */
     bool smp_ctkd_was_ongoing = thePairing->smp_ctkd_ongoing;
     thePairing->smp_ctkd_ongoing = FALSE;
-    
+
     bool current_request = BdaddrTypedIsSame(&thePairing->pending_ble_address, &ind->tpaddr.taddr);
     bool any_pending = !BdaddrTypedIsEmpty(&thePairing->pending_ble_address);
     bool permanent = !BdaddrTypedIsEmpty(&ind->permanent_taddr);
-    
+
     pairingBlePermission permission = thePairing->ble_permission;
     pairingStatus pairing_status = pairingFailed;
 
@@ -1265,7 +1283,7 @@ static void pairing_HandleClSmBleSimplePairingCompleteInd(const CL_SM_BLE_SIMPLE
         if (any_pending && current_request && permission > pairingBleDisallowed)
         {
             bool is_paired = ConnectionSmGetAttributeNowReq(0, TYPED_BDADDR_PUBLIC, &ind->permanent_taddr.addr, 0, NULL);
-            
+
             DEBUG_LOG("pairing_HandleClSmBleSimplePairingCompleteInd is_paired:%d Permanent:%d",
                         is_paired, permanent);
 
@@ -1303,18 +1321,20 @@ static void pairing_HandleClSmBleSimplePairingCompleteInd(const CL_SM_BLE_SIMPLE
                  *
                  * Instead, hold onto them in case the handset still remembers us, despite this failure.
                  * If it doesn't remember us, the user will initiate a new pairing with us anyways. */
+
                 if (!smp_ctkd_was_ongoing)
                 {
-
-					if (permanent)
-					{
-						ConnectionSmDeleteAuthDeviceReq(ind->permanent_taddr.type, &ind->permanent_taddr.addr);
-					}
-					else
-					{
-						ConnectionSmDeleteAuthDeviceReq(ind->tpaddr.taddr.type, &ind->tpaddr.taddr.addr);
-					}
-				}
+                    if (permanent)
+                    {
+                        ConnectionSmDeleteAuthDeviceReq(ind->permanent_taddr.type, &ind->permanent_taddr.addr);
+                    }
+                    else
+                    {
+#ifndef ENABLE_APP_IMPROVE_BLE_CONNECTION
+                        ConnectionSmDeleteAuthDeviceReq(ind->tpaddr.taddr.type, &ind->tpaddr.taddr.addr);
+#endif
+                    }
+                }
             }
 
             /* Pairing is accepted if status is success. */
@@ -1322,11 +1342,16 @@ static void pairing_HandleClSmBleSimplePairingCompleteInd(const CL_SM_BLE_SIMPLE
             {
                 pairing_status = pairingSuccess;
             }
+
             pairing_ResetPendingBleAddress();
+#ifdef ENABLE_APP_IMPROVE_BLE_CONNECTION
+            thePairing->ble_permission = pairingBleOnlyPairedDevices;
+#else
             /* Disallow ble pairing after peer pairing. ble pairing will be enabled once the pairing module enters discoverable mode.
                Disallow ble pairing once ble pairing from a ble app is done.
             */
             thePairing->ble_permission = pairingBleDisallowed;
+#endif
         }
         else
         {
@@ -1334,7 +1359,7 @@ static void pairing_HandleClSmBleSimplePairingCompleteInd(const CL_SM_BLE_SIMPLE
         }
 
     }
-    
+
     if(permanent)
     {
         pairing_Complete(thePairing, pairing_status, &ind->permanent_taddr.addr, permanent);
@@ -1393,7 +1418,7 @@ bool Pairing_HandleConnectionLibraryMessages(MessageId id,Message message, bool 
        not active.
 
        The safeguard is against unexpected messages which could cause a state change.
-       This can happen when a crossover with the device being paired occurs, a command 
+       This can happen when a crossover with the device being paired occurs, a command
        is sent at the same time as a command from the other device.
 
        The known effect of this can be receipt of two CL_SM_BLE_SIMPLE_PAIRING_COMPLETE_IND
@@ -1484,6 +1509,9 @@ static void pairing_HandleMessage(Task task, MessageId id, Message message)
             break;
 
         case PAIRING_INTERNAL_TIMEOUT_IND:
+#ifdef ENABLE_APP_AUTO_POWEROFF_TIMER
+            appSetPairingFlag(TRUE);
+#endif
             pairing_HandleInternalTimeoutIndications(thePairing);
             break;
 
@@ -1496,12 +1524,18 @@ static void pairing_HandleMessage(Task task, MessageId id, Message message)
             break;
 
         case PAIRING_INTERNAL_LE_PAIR_TIMEOUT:
+#ifndef ENABLE_APP_IMPROVE_BLE_CONNECTION
             /* After a configured timeout to disable le pairing expires, disallow le pairing */
             thePairing->ble_permission = pairingBleDisallowed;
             thePairing->smp_ctkd_ongoing = FALSE;
+#endif
+
+#ifdef ENABLE_APP_FIX_BLE_CONNECTED_LED
+            appSetBlePairingFlag(FALSE);
+#endif
             DEBUG_LOG("Ble pairing disallowed. ble_permission : %d", thePairing->ble_permission);
             break;
-            
+
         case PAIRING_INTERNAL_CTKD_TIMEOUT:
             thePairing->smp_ctkd_expected = FALSE;
             DEBUG_LOG("Timed out waiting for CTKD over BR/EDR-SM. Sending PAIRING_COMPLETE to clients.");

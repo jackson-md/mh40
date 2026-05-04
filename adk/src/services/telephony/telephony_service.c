@@ -25,6 +25,19 @@
 #include <panic.h>
 #include <logging.h>
 
+#ifdef ENABLE_APP_ONGONGCALL_HANDLE
+#include "headset_test.h"
+#endif
+
+#ifdef ENABLE_APP_MIC_MUTE
+#include "power_manager.h"
+#endif
+
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+#include "ui_indicator_prompts.h"
+static bool g_isEnableIncomingRingtone = FALSE;
+#endif
+
 static void telephonyService_CallStateNotificationMessageHandler(Task task, MessageId id, Message message);
 static void telephonyService_HandleUiInput(Task task, MessageId ui_input, Message message);
 
@@ -172,6 +185,23 @@ static void telephonyService_CallStateNotificationMessageHandler(Task task, Mess
         case TELEPHONY_TIMEOUT:
             telephonyService_ClearAllLocks();
         break;
+
+#ifdef ENABLE_APP_INCOMMING_RINGTONE
+        case TELEPHONY_INCOMING_CALL_OUT_OF_BAND_RINGTONE:
+            {
+                AudioRouter_Update();
+                if (g_isEnableIncomingRingtone == FALSE)
+                {
+                    g_isEnableIncomingRingtone = TRUE;
+                }
+                else
+                {
+                    //DEBUG_LOG_INFO("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                    UiPrompts_SendEvent(INN_TELEPHONY_INCOMING_RINGTONE, 0);
+                }
+            }
+        break;
+#endif
         
         default:
             handled = FALSE;
@@ -246,10 +276,26 @@ static void telephonyService_HandleUiInput(Task task, MessageId ui_input, Messag
         break;
 
         case ui_input_voice_call_last_dialed:
+            if (appTestIsHandsetHfpCall() == TRUE)
+            {
+                break;
+            }
             VoiceSources_InitiateCallLastDialled(source);
         break;
 
         case ui_input_mic_mute_toggle:
+#if 0
+#ifdef ENABLE_APP_MIC_MUTE
+            if (appTestIsHandsetHfpMuted() == TRUE)
+            {
+                UiPrompts_SendEvent(INN_APP_MIC_UNMUTE_PROMPT, 0);
+            }
+            else
+            {
+                UiPrompts_SendEvent(INN_APP_MIC_MUTE_PROMPT, 0);
+            }
+#endif
+#endif
             VoiceSources_ToggleMicrophoneMute(source);
         break;
         
@@ -264,6 +310,38 @@ static void telephonyService_HandleUiInput(Task task, MessageId ui_input, Messag
         case ui_input_voice_call_join_calls_and_hang_up:
             TelephonyService_JoinCalls(source, telephony_join_calls_and_leave);
         break;
+
+#ifdef ENABLE_APP_ONGONGCALL_HANDLE
+        case ui_input_voice_call_short_press_handle:
+            {
+                /*Ongoing Call(audio in headset)*/
+                if (appTestIsHandsetHfpScoActive() == TRUE)
+                {
+                    TelephonyService_HangUpCall(source);
+                }
+                /*Ongoing Call(audio in phone)*/
+                else
+                {
+                    VoiceSources_TransferOngoingCallAudio(source, voice_source_audio_transfer_to_hfp);
+                }
+            }
+            break;
+
+        case ui_input_voice_call_long_press_handle:
+            {
+                /*Ongoing Call(audio in headset)*/
+                if (appTestIsHandsetHfpScoActive() == TRUE)
+                {
+                    VoiceSources_TransferOngoingCallAudio(source, voice_source_audio_transfer_to_ag);
+                }
+                /*Ongoing Call(audio in phone)*/
+                else
+                {
+                    VoiceSources_TransferOngoingCallAudio(source, voice_source_audio_transfer_to_hfp);
+                }
+            }
+            break;
+#endif
 
         default:
         break;

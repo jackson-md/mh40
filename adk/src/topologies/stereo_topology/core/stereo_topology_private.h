@@ -78,6 +78,11 @@ typedef struct
 
     /*! To track stereo topology sm state */
     stereo_topology_sm_t   stereo_topology_state;
+
+#ifdef ENABLE_APP_OTA_LED
+    bool			      ota_enable;
+#endif
+
 } stereo_topology_task_data_t;
 
 /*! Make the  stereo topology SM instance visible throughout the component */

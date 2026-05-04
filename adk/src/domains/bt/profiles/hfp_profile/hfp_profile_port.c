@@ -31,6 +31,10 @@
 #include <telephony_messages.h>
 #include <volume_messages.h>
 
+#ifdef ENABLE_APP_MD_GAIA
+#include "voice_ui_gaia_plugin.h"
+#endif
+
 static hfp_link_priority hfpProfileInstance_GetLinkForInstance(hfpInstanceTaskData * instance)
 {
     hfp_link_priority link = hfp_invalid_link;
@@ -557,6 +561,12 @@ static void hfpProfile_HandleHfpAudioDisconnectInd(const HFP_AUDIO_DISCONNECT_IN
 
     if(NULL == instance)
     {
+#ifdef ENABLE_APP_FIX_PC_MULTIPOINT_MEETING_SILENT_ISSUE
+        if( ind->status == hfp_audio_disconnect_error)
+        {
+            return;
+        }
+#endif
         /* If the instance is null, it is possible that SLC disconnection in the HFP lib has preceded SCO disconnection.
            In that case, fall-back to getting the HFP instance from the focused voice source, assuming that if we have a
            focused HFP voice source with SCO, then this is the source we need to disconnect.*/
@@ -932,6 +942,10 @@ void hfpProfile_SendBievCommandToInstance(hfpInstanceTaskData * instance, uint8 
     DEBUG_LOG_VERBOSE("hfpProfile_SendBievCommandToInstance sending %d percent to link enum:hfp_link_priority:0x%x",
             percent, link_priority);
     HfpBievIndStatusRequest(link_priority, hf_battery_level, percent);
+
+#ifdef ENABLE_APP_MD_GAIA
+    appUpdateGaiaBatterylevel(percent);
+#endif
 }
 
 void hfpProfile_RefreshCallStateRequest(hfpInstanceTaskData* instance)

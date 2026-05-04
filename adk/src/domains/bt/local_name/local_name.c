@@ -15,6 +15,11 @@
 
 #include "local_name.h"
 
+#ifdef ENABLE_APP_MD_GAIA
+#include "tym_ps.h"
+#include <stdio.h>
+#endif
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_TYPE(local_name_message_t)
 ASSERT_MESSAGE_GROUP_NOT_OVERFLOWED(LOCAL_NAME, LOCAL_NAME_MESSAGE_END)
@@ -105,3 +110,88 @@ const uint8 *LocalName_GetPrefixedName(uint16* name_len)
     *name_len = local_name_task_data.name_len;
     return PanicNull(local_name_task_data.name);
 }
+
+#ifdef ENABLE_APP_MD_GAIA
+bool LocalName_SetTymPsKeyName(uint16 size_tym_name, uint8 *tym_name)
+{
+    uint8 ps_value[32] = {0};
+    uint8 ps_len;
+
+    memcpy(ps_value, tym_name, size_tym_name);
+
+    /* Make sure the name is null terminated */
+    if (ps_value[size_tym_name-1] != '\0')
+    {
+        ps_value[size_tym_name] = '\0';
+        ps_len = size_tym_name + 1;
+    }
+    else
+    {
+        ps_len = size_tym_name;
+    }
+
+    DEBUG_LOG_INFO("LocalName_SetTymPsKeyName: ");
+    for(int i=0; i<strlen((char*)ps_value); i++)
+    {
+        DEBUG_LOG_INFO("%c",ps_value[i]);
+    }
+
+    if(PsStore(PSKEY_INN_DEVICE_NAME, ps_value, ps_len) == ps_len)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+bool LocalName_GetTymPsKeyName(uint16 *size_tym_name, uint8 *tym_name)
+{
+    uint8 ps_value[32] = {0};
+
+    if(PsRetrieve(PSKEY_INN_DEVICE_NAME, ps_value, 32) == 0)
+    {
+        return FALSE;
+    }
+
+    /*should include '\0' */
+    DEBUG_LOG_INFO("LocalName_GetTymPsKeyName: ");
+    for(int i=0; i<strlen((char*)ps_value + 1); i++)
+    {
+        DEBUG_LOG_INFO("%c",ps_value[i]);
+    }
+
+    memcpy(tym_name, ps_value, strlen((char*)ps_value) + 1);
+    *size_tym_name = strlen((char*)ps_value) + 1;
+
+    return TRUE;
+}
+
+bool LocalName_GetTESTPsKeyName(uint16 *size_tym_name, uint8 *tym_name)
+{
+    sprintf((char *)tym_name,"M&D MH40W");
+    *size_tym_name = strlen((char*)tym_name) + 1;
+
+    return TRUE;
+}
+
+bool LocalName_TymPsKeyNameCheck(Task init_task)
+{
+    UNUSED(init_task);
+
+    uint16 size_tym_name;
+    uint8 tym_name[32];
+
+    /*if TYM ps_key name exist, use TYM ps_key name to ChangeLocalName*/
+    if(LocalName_GetTymPsKeyName(&size_tym_name, tym_name))
+    {
+        ConnectionChangeLocalName(strlen((char*)tym_name),(uint8*)tym_name);
+    }
+    else if(LocalName_GetTESTPsKeyName(&size_tym_name, tym_name))
+    {
+        ConnectionChangeLocalName(strlen((char*)tym_name),(uint8*)tym_name);
+    }
+    return TRUE;
+}
+#endif
