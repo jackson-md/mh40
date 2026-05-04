@@ -1,0 +1,5 @@
+Download Capability BUILD ID = 20987
+ELF File ID = 0xCBF1FA07
+Base Build ID = 20960
+Python tools version = kal_python_tools_linux64_external_1.1.11
+KCC version = kcc-72-linux

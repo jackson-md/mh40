@@ -1,0 +1,27 @@
+############################################################################
+# CONFIDENTIAL
+#
+# Copyright 2021 Qualcomm Technologies International, Ltd.
+#
+############################################################################
+# Definitions required to build the downloadable @@@cap_name@@@
+
+# Qualcomm supplied paths must be listed here.examples provided as commented.
+%list ALL_INCDIRS
+#../lib/math
+
+%list ALL_SRCDIRS
+#../lib/math
+
+%list CFG_LIBS
+#../lib/math/math
+
+# Customer capabilities must be listed here.
+%list CUSTOM_INCDIRS
+capabilities/@@@cap_name@@@
+
+%list CUSTOM_SRCDIRS
+capabilities/@@@cap_name@@@
+
+%list CUSTOM_LIBS
+capabilities/@@@cap_name@@@/@@@cap_name@@@

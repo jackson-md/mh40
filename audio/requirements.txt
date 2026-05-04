@@ -1,0 +1,8 @@
+-f .
+ACAT==1.12.2
+kse==0.30.0
+kal-python-tools>=1.1.9
+KSP==0.6.0
+numpy>=1.16.4,<2.0 # Required for AANC KSE script (using fir_filter koperator)
+scipy>=1.2.0,<2.0 # Required for AANC KSE script (using fir_filter koperator)
+aanclogger==0.4.5

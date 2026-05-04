@@ -1,0 +1,2 @@
+
+/home/devtools/kcc/kcc-72-linux/bin/kobjcopy: /home/svc-audio-dspsw/kymera_builds/builds/2022/kymera_2203310850/kalimba/kymera/output/streplus_rom_kalsim_kalcmd2_release/build/debugbin/kymera_streplus_audio_external.const_private:2245: Ignoring rubbish found on this line

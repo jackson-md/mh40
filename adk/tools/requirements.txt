@@ -1,0 +1,4 @@
+# Python requirements file
+
+-f ./wheels
+vm_build

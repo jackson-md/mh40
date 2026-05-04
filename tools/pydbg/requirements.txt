@@ -1,0 +1,8 @@
+-f wheels
+customer_pydbg_base
+customer_pydbg_cextn
+customer_pydbg_cryptodll
+customer_pydbg_hydratrans
+customer_pydbg_qcc514x_qcc304x
+customer_pydbg_qcc516x7x_qcc306x7x
+pydbg_default
