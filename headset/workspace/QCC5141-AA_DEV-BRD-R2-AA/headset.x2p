@@ -18,7 +18,7 @@
     <file path="../../../adk/src/services/peer/peer_link_keys/peer_link_keys.typedef"/>
     <file path="../../../adk/src/services/peer/peer_ui/peer_ui.typedef"/>
     <file path="../../../adk/src/services/voice_ui/voice_ui/voice_ui_peer_sig.typedef"/>
-    <configurations>
+    <configurations default="debug">
         <configuration name="debug" options="clean|build|deploy|run|default">
             <devkitConfiguration>application</devkitConfiguration>
             <deployProject>deploy</deployProject>

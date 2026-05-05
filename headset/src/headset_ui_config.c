@@ -129,6 +129,11 @@ const ui_config_table_content_t headset_ui_config_table[] =
 
     {APP_POWER_BUTTON_SHORT_PRESS_RELEASE,       ui_provider_app_sm,          context_app_sm_inactive,                 ui_input_sm_power_on                  },
     {APP_POWER_BUTTON_SHORT_PRESS_RELEASE,       ui_provider_app_sm,          context_app_sm_active,                   ui_input_sm_power_off                 },
+    {APP_MFB_BUTTON_LONG_PRESS,                  ui_provider_voice_ui,        context_voice_ui_default,                ui_input_va_1                 },
+    {APP_MFB_BUTTON_SINGLE_PRESS,                ui_provider_voice_ui,        context_voice_ui_default,                ui_input_va_2                 },
+    {APP_MFB_BUTTON_DOUBLE_CLICK,                ui_provider_voice_ui,        context_voice_ui_default,                ui_input_va_3                 },
+    {APP_MFB_BUTTON_TRIPLE_CLICK,                ui_provider_voice_ui,        context_voice_ui_default,                ui_input_va_4                 },
+
 #ifdef ENABLE_APP_BATTERY_CHECK_LED
     //{APP_POWER_BUTTON_SKP,              ui_provider_app_sm,          context_app_sm_active,                   ui_input_battery_precent_check        },
 #endif

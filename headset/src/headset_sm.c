@@ -120,7 +120,8 @@ const message_group_t sm_ui_inputs[] =
 {
     UI_INPUTS_HANDSET_MESSAGE_GROUP,
     UI_INPUTS_DEVICE_STATE_MESSAGE_GROUP,
-    UI_INPUTS_APP_MESSAGE_GROUP
+    UI_INPUTS_APP_MESSAGE_GROUP,
+    UI_INPUTS_VOICE_UI_MESSAGE_GROUP,
 };
 
 /*! \brief Get the state machine disconnect lock. */
@@ -1260,6 +1261,18 @@ static void headsetSmHandleUiInput(MessageId ui_input)
 {
     switch (ui_input)
     {
+        case ui_input_va_1:
+            HeadsetGaiaPlugin_va_notification(0x01);
+            break;
+        case ui_input_va_2:
+            HeadsetGaiaPlugin_va_notification(0x02);
+            break;
+        case ui_input_va_3:
+            HeadsetGaiaPlugin_va_notification(0x03);
+            break;
+        case ui_input_va_4:
+            HeadsetGaiaPlugin_va_notification(0x04);
+            break;
         case ui_input_sm_power_on:
 #ifdef ENABLE_APP_USB_AUDIO
             /* --- When the USB is inserted, disable power on or power off --- start -- */

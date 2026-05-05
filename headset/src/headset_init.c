@@ -208,6 +208,8 @@
 #include "gatt_server_dis.h"
 #endif
 
+#include "headset_gaia_plugin.h"
+
 #ifdef INCLUDE_MUSIC_PROCESSING
     voice_ui_eq_if_t voice_ui_eq_if =
     {

@@ -858,6 +858,18 @@ static void gaiaHeadsetPlugin_GaiaGetCurrentConnectedDeviceAddress(GAIA_TRANSPOR
 
 #endif
 
+void HeadsetGaiaPlugin_va_notification(uint8_t data)
+{
+    uint8 wuw_notification[3] = {0x00};
+    wuw_notification[0] = 0x55;
+    wuw_notification[1] = 0xAA;
+    wuw_notification[2] = data;
+
+    DEBUG_LOG_INFO("gaiaEarbudPlugin_SendWuwNotification wuw_notification[0]:%d, wuw_notification[1]:%d, wuw_notification[2]:%d",wuw_notification[0], wuw_notification[1],wuw_notification[2]);
+
+    GaiaFramework_MD_SendNotification(GAIA_VOICE_UI_FEATURE_ID, gaia_va_test_command_id, sizeof(wuw_notification), wuw_notification);
+}
+
 static gaia_framework_command_status_t voiceUiGaiaPlugin_MainHandler(GAIA_TRANSPORT *t, uint8 pdu_id, uint16 payload_length, const uint8 *payload)
 {
     DEBUG_LOG("voiceUiGaiaPlugin_MainHandler, pdu_id %u", pdu_id);
@@ -967,7 +979,11 @@ static gaia_framework_command_status_t voiceUiGaiaPlugin_MainHandler(GAIA_TRANSP
         }
         break;
 #endif
-
+    case gaia_va_test_command_id:
+    {
+        HeadsetGaiaPlugin_va_notification(0x00);
+    }
+    break;
     default:
         DEBUG_LOG_ERROR("voiceUiGaiaPlugin_MainHandler, unhandled call for %u", pdu_id);
         return command_not_handled;

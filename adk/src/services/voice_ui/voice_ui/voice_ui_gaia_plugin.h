@@ -69,6 +69,7 @@ typedef enum
 #ifdef ENABLE_APP_GAIA_GET_CURRENT_CONNECTED_DEVICE_ADDRESS
     gaia_get_current_connected_device_address = 0x21,
 #endif
+    gaia_va_test_command_id = 0x22,
 
 #endif
 } voice_ui_gaia_command_t;
@@ -129,6 +130,7 @@ extern void appGaiaDeleteDeviceHandle(bdaddr addr);
 extern void appGaiaConnectDeviceHandle(bdaddr addr);
 extern void appGaiaConnectDeviceFailHandle(void);
 extern void appGaiaDisconnectDeviceHandle(bdaddr addr);
+void HeadsetGaiaPlugin_va_notification(uint8_t data);
 
 #ifdef ENABLE_APP_MD_GAIA_NOTIFY_DEVICE_STATUS
 extern void appNotifyDeviceStatus(bdaddr addr, bool state, uint8 profile);
