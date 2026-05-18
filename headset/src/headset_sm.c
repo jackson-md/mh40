@@ -99,6 +99,8 @@
 #include "voice_ui_gaia_plugin.h"
 #endif
 
+#include "va_audio_test.h"
+
 /* Make the type used for message IDs available in debug tools */
 LOGGING_PRESERVE_MESSAGE_ENUM(sm_internal_message_ids)
 
@@ -1249,6 +1251,8 @@ static void headsetSmHandlePowerOn(void)
     }
 }
 
+bool vaStarted = FALSE;
+
 /*! \brief handles sm module specific ui inputs
 
     Invokes routines based on ui input received from ui module.
@@ -1261,17 +1265,24 @@ static void headsetSmHandleUiInput(MessageId ui_input)
 {
     switch (ui_input)
     {
-        case ui_input_va_1:
-            HeadsetGaiaPlugin_va_notification(0x01);
+        case ui_input_va_long:
+            HeadsetGaiaPlugin_va_notification(0x55);
+            vaStarted = appTestStartVaCapture(va_audio_codec_opus,1);
             break;
         case ui_input_va_2:
-            HeadsetGaiaPlugin_va_notification(0x02);
+            HeadsetGaiaPlugin_va_notification(0x01);
             break;
         case ui_input_va_3:
-            HeadsetGaiaPlugin_va_notification(0x03);
+            HeadsetGaiaPlugin_va_notification(0x02);
             break;
         case ui_input_va_4:
-            HeadsetGaiaPlugin_va_notification(0x04);
+            HeadsetGaiaPlugin_va_notification(0x03);
+            break;
+        case ui_input_va_release:
+            if(vaStarted) {
+                appTestStopVaCapture();
+                vaStarted = FALSE;
+            }
             break;
         case ui_input_sm_power_on:
 #ifdef ENABLE_APP_USB_AUDIO

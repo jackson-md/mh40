@@ -9,7 +9,7 @@
     <file path="../../../../audio/qcc514x_qcc304x/kalimba_ROM_7120/kymera/prebuilt_dkcs/streplus_rom_release/download_switched_passthrough_consumer.edkcs"/>
     <file path="../../../../audio/qcc514x_qcc304x/kalimba_ROM_7120/kymera/prebuilt_dkcs/streplus_rom_release/download_va_graph_manager.edkcs"/>
     <file path="../../../../audio/qcc514x_qcc304x/kalimba_ROM_7120/kymera/prebuilt_dkcs/streplus_rom_release/download_volume_control.edkcs"/>
-    <configurations>
+    <configurations default="filesystem">
         <configuration name="filesystem" options="build|deploy|default">
             <devkitConfiguration>filesystem</devkitConfiguration>
             <deployProject>deploy</deployProject>
@@ -34,4 +34,5 @@
     <file path="../../../prompts/sbc/MD_VolumeMaxMin_48K.sbc"/>
     <file path="../../../prompts/sbc/MD_MicMute_48K.sbc"/>
     <file path="../../../prompts/sbc/MD_MicUnmute_48K.sbc"/>
+    <file path="../../../../audio/qcc514x_qcc304x/kalimba_ROM_7120/kymera/prebuilt_dkcs/streplus_rom_release/download_opus_celt_encode.edkcs"/>
 </project>

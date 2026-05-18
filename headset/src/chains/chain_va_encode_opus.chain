@@ -7,7 +7,7 @@
     <include_header name="../headset_cap_ids.h"/>
     <include_header name="kymera_chain_roles.h"/>
   
-    <operator name="OPR_OPUS_ENCODER" id="CAP_ID_OPUS_CELT_ENCODE">
+    <operator name="OPR_OPUS_ENCODER" id="CAP_ID_DOWNLOAD_OPUS_CELT_ENCODE">
         <sink name="IN" terminal="0"/>
         <source name="OUT" terminal="0"/>
     </operator>

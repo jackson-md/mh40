@@ -13,6 +13,7 @@
 #include "ama_config.h"
 #include <logging.h>
 #include <operator.h>
+#include "voice_ui_gaia_plugin.h"
 
 #ifdef GC_SECTIONS
 /* Move all functions in KEEP_PM section to ensure they are not removed during
@@ -72,9 +73,12 @@ static bool vaTestPopulateVaMicConfig(unsigned num_of_mics, va_audio_mic_config_
     }
 }
 
+static uint8_t count = 0;
 static bool vaTestDropDataInSource(Source source)
 {
     DEBUG_LOG_V_VERBOSE("vaTestDropDataInSource");
+    count++;
+    HeadsetGaiaPlugin_va_notification(count);
     SourceDrop(source, SourceSize(source));
     return 0;
 }
@@ -88,6 +92,7 @@ bool appTestStartVaCapture(va_audio_codec_t encoder, unsigned num_of_mics)
 {
     bool status = FALSE;
     va_audio_voice_capture_params_t params = {0};
+    count = 0;
 
     if (vaTestPopulateVoiceCaptureParams(encoder, num_of_mics, &params))
     {

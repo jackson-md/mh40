@@ -287,10 +287,10 @@ static ui_user_config_action_id_t uiUserConfig_LookupActionId(ui_input_t ui_inpu
     case ui_input_voice_call_join_calls_and_hang_up:
         return ui_action_voice_join_calls_hang_up;
 
-    case ui_input_va_1:
-    case ui_input_va_5:
-    case ui_input_va_6:
-        return ui_action_va_fetch_query;
+    //case ui_input_va_1:
+    //case ui_input_va_5:
+    //case ui_input_va_6:
+        //return ui_action_va_fetch_query;
 
     default:
         return ui_action_end_sentinel;

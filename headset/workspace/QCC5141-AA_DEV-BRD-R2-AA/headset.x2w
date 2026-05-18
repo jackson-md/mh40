@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workspace>
+<workspace lastRevision="3786475">
     <aliases>
         <alias name="extensions">wsroot://adk/tools/extensions</alias>
         <alias name="audio">wsroot://audio/qcc514x_qcc304x</alias>
     </aliases>
-    <project path="headset.x2p" default="yes">
-        <dependencies>
-            <project name="sys_cfg"/>
-            <project name="fw_cfg"/>
-            <project name="dev_cfg"/>
-            <project name="ps_cfg"/>
-            <project name="ro_fs"/>
-            <project name="appsp0"/>
-            <project name="libs"/>
-            <project name="os"/>
-            
-        </dependencies>
-    </project>
     <project name="sys_cfg" path="../QCC5141-AA_DEV-BRD-R2-AA/filesystems/sys_cfg.x2p" default="no"/>
     <project name="fw_cfg" path="../QCC5141-AA_DEV-BRD-R2-AA/filesystems/fw_cfg.x2p" default="no"/>
     <project name="dev_cfg" path="../QCC5141-AA_DEV-BRD-R2-AA/filesystems/dev_cfg.x2p" default="no"/>
@@ -31,5 +18,16 @@
         </dependencies>
     </project>
     <project name="deploy" path="../QCC5141-AA_DEV-BRD-R2-AA/filesystems/deploy.x2p" default="no"/>
-    
+    <project name="headset" path="headset.x2p" default="yes">
+        <dependencies>
+            <project name="fw_cfg"/>
+            <project name="appsp0"/>
+            <project name="dev_cfg"/>
+            <project name="os"/>
+            <project name="ps_cfg"/>
+            <project name="ro_fs"/>
+            <project name="libs"/>
+            <project name="sys_cfg"/>
+        </dependencies>
+    </project>
 </workspace>

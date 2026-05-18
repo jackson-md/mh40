@@ -129,6 +129,8 @@
     UI_INPUT(ui_input_va_4) \
     UI_INPUT(ui_input_va_5) \
     UI_INPUT(ui_input_va_6) \
+    UI_INPUT(ui_input_va_long) \
+    UI_INPUT(ui_input_va_release) \
     UI_INPUT(ui_input_gaming_mode_toggle = UI_INPUTS_GAMING_MODE_MESSAGE_BASE) \
     UI_INPUT(ui_input_invalid = UI_INPUTS_BOUNDS_CHECK_MESSAGE_BASE) \
 
