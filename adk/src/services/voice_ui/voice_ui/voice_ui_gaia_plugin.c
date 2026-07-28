@@ -114,6 +114,7 @@ static void voiceUiGaiaPlugin_GetSupportedAssistants(GAIA_TRANSPORT *t)
 /* After set command, remote device acknowledge */
 //static const uint8 success_back_value    = 0xF1;
 static const uint8 failed_back_value     = 0xF0;
+static bool isAppReady = FALSE;
 
 static void gaiaHeadsetPlugin_GetProductID(GAIA_TRANSPORT *t, uint16 payload_length, const uint8 *payload)
 {
@@ -858,6 +859,45 @@ static void gaiaHeadsetPlugin_GaiaGetCurrentConnectedDeviceAddress(GAIA_TRANSPOR
 
 #endif
 
+void voiceUiGaiaPlugin_SendDataChunk(uint8 *data, uint16 data_len)
+{
+    GaiaFramework_MD_SendNotification(GAIA_VOICE_UI_FEATURE_ID, gaia_va_test_command_id, data_len, data);
+}
+
+void voiceUiGaiaPlugin_SetIsAppReady(bool value) {
+    isAppReady = value;
+}
+
+bool voiceUiGaiaPlugin_IsAppReady(void)
+{
+    //uint8_t value[] = {0x05};
+    //GaiaFramework_MD_SendDataNotification(GAIA_EARBUD_FEATURE_ID, wuw_notify,sizeof(value), value);
+    return isAppReady;
+}
+
+static void voiceUiGaiaPlugin_wuwData(GAIA_TRANSPORT *t, uint16 payload_length, const uint8 *payload)
+{
+    UNUSED(t);
+    UNUSED(payload_length);
+    uint8_t value[] = {0x05};
+    //va_audio_wuw_detected_response_t detectedResponse = getDetectedResponse();
+    /* Left earbud sets value to 0, right sets value to 1 */
+    switch(payload[0])
+    {
+        case wuw_start_stream:
+            isAppReady = TRUE;
+
+            //KymeraVaHandler_ActivateMicChainEncodeOutputForWuwCapture(&detectedResponse.capture_params); // Need this to start detected->capturing, not idle->capturing
+            break;
+        case wuw_stop_stream:
+            isAppReady = FALSE;
+            break;
+        default:
+            break;
+    }
+    GaiaFramework_MD_SendResponse(t, GAIA_VOICE_UI_FEATURE_ID, wuw_command, sizeof(value), payload);
+}
+
 void HeadsetGaiaPlugin_va_notification(uint8_t data)
 {
     uint8 wuw_notification[3] = {0x00};
@@ -891,6 +931,9 @@ static gaia_framework_command_status_t voiceUiGaiaPlugin_MainHandler(GAIA_TRANSP
 #endif
 
 #ifdef ENABLE_APP_MD_GAIA
+    case wuw_command:
+        voiceUiGaiaPlugin_wuwData(t,payload_length,payload);
+        break;
     case gaia_get_product_id:
         {
             gaiaHeadsetPlugin_GetProductID(t, payload_length, payload);
@@ -1001,6 +1044,7 @@ static void voiceUiGaiaPlugin_TransportConnect(GAIA_TRANSPORT *t)
 static void upgradeGaiaPlugin_TransportDisconnect(GAIA_TRANSPORT *t)
 {
     DEBUG_LOG_INFO("voiceUiGaiaPlugin_TransportDisconnect, transport %p", t);
+    isAppReady = FALSE;
 }
 
 static void voiceUiGaiaPlugin_SendAllNotifications(GAIA_TRANSPORT *transport)

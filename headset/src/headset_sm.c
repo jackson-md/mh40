@@ -1267,7 +1267,7 @@ static void headsetSmHandleUiInput(MessageId ui_input)
     {
         case ui_input_va_long:
             HeadsetGaiaPlugin_va_notification(0x55);
-            vaStarted = appTestStartVaCapture(va_audio_codec_opus,1);
+            vaStarted = appTestStartVaCapture(va_audio_codec_opus,2);
             break;
         case ui_input_va_2:
             HeadsetGaiaPlugin_va_notification(0x01);

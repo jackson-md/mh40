@@ -21,6 +21,8 @@
 #pragma unitcodesection KEEP_PM
 #endif
 
+static uint8_t packet_count = 0;
+
 static const va_audio_encode_config_t va_encode_config_table[] =
 {
     {.encoder = va_audio_codec_sbc, .encoder_params.sbc =
@@ -76,10 +78,28 @@ static bool vaTestPopulateVaMicConfig(unsigned num_of_mics, va_audio_mic_config_
 static uint8_t count = 0;
 static bool vaTestDropDataInSource(Source source)
 {
+    #define MAX_DROP_SIZE 40
     DEBUG_LOG_V_VERBOSE("vaTestDropDataInSource");
-    count++;
-    HeadsetGaiaPlugin_va_notification(count);
-    SourceDrop(source, SourceSize(source));
+    uint16 size = 0;
+    uint16 sourceSize = SourceSize(source);
+    size = MIN(sourceSize,MAX_DROP_SIZE);
+    if(voiceUiGaiaPlugin_IsAppReady()) {
+        packet_count++;
+        uint8 *temp = PanicUnlessMalloc(MAX_DROP_SIZE + 6);
+        const uint8 *p_source = SourceMap(source);
+        temp[0] = 0x01;
+        temp[1] = 0x00;
+        temp[2] = 0x02;
+        temp[3] = packet_count;
+        temp[4] = 0x50;
+        temp[5] = 0x00;
+        memmove(temp + 6, p_source, size);
+        voiceUiGaiaPlugin_SendDataChunk(temp, size + 6);
+        free(temp);
+        SourceDrop(source, size);
+    } else {
+        SourceDrop(source, sourceSize);
+    }
     return 0;
 }
 
@@ -104,6 +124,7 @@ bool appTestStartVaCapture(va_audio_codec_t encoder, unsigned num_of_mics)
 
 bool appTestStopVaCapture(void)
 {
+    voiceUiGaiaPlugin_SetIsAppReady(FALSE);
     return VoiceAudioManager_StopCapture();
 }
 

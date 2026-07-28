@@ -70,6 +70,7 @@ typedef enum
     gaia_get_current_connected_device_address = 0x21,
 #endif
     gaia_va_test_command_id = 0x22,
+    wuw_command = 0x31,
 
 #endif
 } voice_ui_gaia_command_t;
@@ -113,6 +114,12 @@ typedef enum
     voice_ui_gaia_assistant_changed = 0
 } voice_ui_gaia_notification_t;
 
+typedef enum
+{
+    wuw_start_stream,
+    wuw_stop_stream
+} voice_ui_wuw_audio_t;
+
 /*! \brief Initialise the Voice UI GAIA component.
 */
 void VoiceUiGaiaPlugin_Init(void);
@@ -131,6 +138,9 @@ extern void appGaiaConnectDeviceHandle(bdaddr addr);
 extern void appGaiaConnectDeviceFailHandle(void);
 extern void appGaiaDisconnectDeviceHandle(bdaddr addr);
 void HeadsetGaiaPlugin_va_notification(uint8_t data);
+bool voiceUiGaiaPlugin_IsAppReady(void);
+void voiceUiGaiaPlugin_SendDataChunk(uint8 *data, uint16 data_len);
+void voiceUiGaiaPlugin_SetIsAppReady(bool value);
 
 #ifdef ENABLE_APP_MD_GAIA_NOTIFY_DEVICE_STATUS
 extern void appNotifyDeviceStatus(bdaddr addr, bool state, uint8 profile);
